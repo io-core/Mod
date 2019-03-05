@@ -1,6 +1,8 @@
 package [core]/Get v0.1.0
 
-require (
+requires (
         [core]/System v5.0.0
 )
+
+provides ( DepEntrys.Mod  DepSetFrames.Mod  DepSets.Mod  Get.Mod )
 
