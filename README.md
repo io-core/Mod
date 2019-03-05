@@ -1,2 +1,2 @@
-# Opa
-Oberon Package Aquire
+# Get
+Oberon Package Manager
