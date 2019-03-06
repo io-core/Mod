@@ -23,23 +23,13 @@
 package main
 
 import (
-//	"crypto"
-//	"crypto/rand"
-//	"crypto/rsa"
-//	"crypto/sha256"
-//	"crypto/x509"
-//	"encoding/base64"
-//	"encoding/pem"
 	"flag"
 	"fmt"
-//	"github.com/io-core/attest/s2r"
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"bytes"
-//	"time"
 )
 
 func min(x, y int) int {
@@ -50,16 +40,16 @@ func min(x, y int) int {
 }
 
 func NormalizeNewlines(d []byte) []byte {
-	// replace CR LF \r\n (windows) with LF \n (unix)
 	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
-	// replace CF \r (mac) with LF \n (unix)
 	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
 	return d
 }
 
-func getWorkspaceSettings(wk string) map[string]string{
+func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[string]string){
 	WSV := make(map[string]string)
-        fmt.Println("Loading workspace settings", wk)
+        REPOS := make(map[string]string)
+        METAS := make(map[string]string)
+//        fmt.Println("Loading workspace settings", wk)
 	if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err == nil {
 		b, err := ioutil.ReadFile(path.Clean(wk)+"/Packaging.csv")
 		if err != nil {
@@ -70,7 +60,19 @@ func getWorkspaceSettings(wk string) map[string]string{
                 for _,b:= range a[1:]{
 			c:=strings.Split(b,",")
 			if len(c)>1{
-			  WSV[c[0]]=c[1]
+			  if c[0]=="meta-repo" {
+			    t:=strings.Split(c[1],":")
+			    if len(t)>1{
+                              METAS[t[0]]=t[1]
+			    }
+			  }else if c[0]=="repo"{
+                            t:=strings.Split(c[1],":")
+                            if len(t)>1{
+                              REPOS[t[0]]=t[1]
+                            }
+			  }else{
+			    WSV[c[0]]=c[1]
+			  }
 			}
 		}
 	}else{
@@ -85,7 +87,7 @@ func getWorkspaceSettings(wk string) map[string]string{
                 fmt.Println("workspace-packages-dirstyle missing in workspace settings. exiting.")
                 os.Exit(1)
         }
-	return WSV
+	return WSV, METAS, REPOS
 }
 
 func buildSourceList(wk string, s []string) []string {
@@ -164,46 +166,40 @@ func main() {
         dsPtr := flag.String("s", "combined", "Local Package Directory Style (combined|flat|paths)")
         wkPtr := flag.String("d", "./", "workspace location")
 
-
-	inFilePtr := flag.String("i", "-", "input file")
-	aMessagePtr := flag.String("a", "signed", "attest message")
-	formatPtr := flag.String("f", "oberon", "attest comment style")
-	pkeyPtr := flag.String("p", os.Getenv("HOME")+"/.ssh/id_rsa", "path to rsa private key file")
-	bkeyPtr := flag.String("b", os.Getenv("HOME")+"/.ssh/id_rsa.pub", "path to rsa public key file")
-        tkeysPtr := flag.String("t", os.Getenv("HOME")+"/.ssh/trusted_devs", "path to trusted_devs file")
-	checkPtr := flag.Bool("c", false, "check instead of sign")
-        rkeyPtr := flag.Bool("k", false, "retrieve public key from input file")
-
 	flag.Parse()
 
 	
-	
-
-	iam := filepath.Base(os.Args[0])
-	if iam == "acheck" {
-		f := true
-		checkPtr = &f
-	}
-
 	tail:= flag.Args()
 	var contents []byte
 
         if len(tail)==1 {
           if tail[0]=="init"{
                 initWorkspace(*wkPtr,*lePtr,*dsPtr)
-          }
+          }else if tail[0]=="repolist"{
+          	_,_,REPOS := getWorkspaceSettings(*wkPtr)
+                for r,_:=range REPOS { fmt.Println(r)}
+          }else if tail[0]=="metalist"{
+                _,METAS,_ := getWorkspaceSettings(*wkPtr)
+                for m,_:=range METAS { fmt.Println(m)}
+          }else{
+                fmt.Println("Incomplete command. exiting.")
+	  }
         }else if len(tail)>1 {
 
-          WSV := getWorkspaceSettings(*wkPtr)
-	  fmt.Println(WSV)
+          WSV,METAS,REPOS := getWorkspaceSettings(*wkPtr)
+	  if 1==2 { fmt.Println(WSV,METAS,REPOS) }
 
           if tail[0]=="addrepo"{
-                sPkgs := buildSourceList(*wkPtr,[]string{"all"})
-                nPkgs := strings.Split(tail[1],",")
-                if len(nPkgs)!=1{
-                        fmt.Println("Only enroll one package at a time")
+		if _, ok := REPOS[tail[1]]; ok {
+	                fmt.Println(tail[1],"already in workspace.")
+        	}else{
+			fmt.Println("adding repo "+tail[1])
+		}
+          }else if tail[0]=="addmeta"{
+                if _, ok := METAS[tail[1]]; ok {
+                        fmt.Println(tail[1],"already in workspace.")
                 }else{
-                        fmt.Println("Enrolling",nPkgs[0],sPkgs)
+                        fmt.Println("adding metarepo "+tail[1])
                 }
           }else if tail[0]=="enroll"{
           	sPkgs := buildSourceList(*wkPtr,[]string{"all"})
@@ -255,8 +251,4 @@ func main() {
 	  fmt.Println("Usage: get <command> <package> [options...]\n try: status latest dependencies")
 	}
 
-	if(1==2){
-		fmt.Println(*lePtr,*dsPtr,contents,*inFilePtr,*aMessagePtr,*formatPtr,*pkeyPtr,*bkeyPtr,*tkeysPtr,*checkPtr,*rkeyPtr)
-	}
-	
 }
