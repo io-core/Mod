@@ -1,6 +1,10 @@
 package [core]/Package v0.1.0
 
-require (
+requires (
         [core]/System v5.0.0
+)
+
+provides (
+	PackageFrames.Mod  Package.Mod  Packages.Mod  Resources.Mod
 )
 
