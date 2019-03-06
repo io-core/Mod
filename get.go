@@ -36,7 +36,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-//	"strings"
+	"strings"
 //	"time"
 )
 
@@ -47,6 +47,31 @@ func min(x, y int) int {
 	return y
 }
 
+func buildSourceList(s []string) []string {
+	  var files []string
+
+          if s[0]=="all" {
+                fileInfo, _ := ioutil.ReadDir(".")
+                for _, file := range fileInfo {
+                  n:=file.Name()
+                  if len(n)>4 {
+                    if n[len(n)-4:]==".Pkg" {
+                      files = append(files, n)
+                    }
+                  }
+                }
+          }else{
+                for _, fn := range s {
+                        if _, err := os.Stat("./"+fn+".Pkg"); err == nil {
+                                files = append(files, fn+".Pkg")
+                        }else{
+                                fmt.Println("Package",fn,"Not Found, exiting.")
+                                os.Exit(1)
+                        }
+                }
+          }
+    	  return files
+}
 
 func main() {
 	
@@ -71,14 +96,50 @@ func main() {
 
 	tail:= flag.Args()
 	var contents []byte
-	if len(tail)>0 {
-	  contents, _ = ioutil.ReadFile(tail[0])
+
+        if len(tail)>1 {
+
+	  sPkgs := buildSourceList(strings.Split(tail[1],","))
+
+	  fmt.Println(sPkgs)
+
+          if tail[0]=="status"{
+		if tail[1]=="all"{
+		}else{
+			contents, _ = ioutil.ReadFile(tail[1]+".Pkg")
+                	fmt.Println("Status of", tail[1],":")
+			fmt.Println(string(contents))
+		}
+          }else if tail[0]=="latest"{
+                if tail[1]=="all"{
+                }else{
+                        contents, _ = ioutil.ReadFile(tail[1]+".Pkg")
+                        fmt.Println("Status of", tail[1],":")
+                        fmt.Println(string(contents))
+                } 
+          }else if tail[0]=="updates"{
+                if tail[1]=="all"{
+                }else{
+                        contents, _ = ioutil.ReadFile(tail[1]+".Pkg")
+                        fmt.Println("Status of", tail[1],":")
+                        fmt.Println(string(contents))
+                }
+          }else if tail[0]=="exact"{
+                if tail[1]=="all"{
+                }else{
+                        contents, _ = ioutil.ReadFile(tail[1]+".Pkg")
+                        fmt.Println("Status of", tail[1],":")
+                        fmt.Println(string(contents))
+                }
+          }else{
+                fmt.Println("what?")
+          }
 	}else{
-	  contents, _ = ioutil.ReadFile(*inFilePtr)
+	  fmt.Println("Usage: get <command> <package> [options...]\n try: status latest dependencies")
 	}
 
 	if(1==2){
 		fmt.Println(contents,*inFilePtr,*aMessagePtr,*formatPtr,*pkeyPtr,*bkeyPtr,*tkeysPtr,*checkPtr,*rkeyPtr)
 	}
-	fmt.Println("OK")
+	
 }
