@@ -35,6 +35,7 @@ import (
 //	"github.com/io-core/attest/s2r"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 //	"time"
@@ -47,11 +48,28 @@ func min(x, y int) int {
 	return y
 }
 
-func buildSourceList(s []string) []string {
+func getWorkspaceSettings(wk string) map[string]string{
+	var WSV map[string]string
+        fmt.Println("Loading workspace settings", wk)
+	if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err == nil {
+		b, err := ioutil.ReadFile(path.Clean(wk)+"/Packaging.csv")
+		if err != nil {
+			fmt.Print("Couldn't read Packaging.csv")
+			os.Exit(1)
+		}
+		fmt.Println(string(b))
+	}else{
+                fmt.Println("Workspace",wk,"is not initialized, exiting.")
+                os.Exit(1)	
+	}
+	return WSV
+}
+
+func buildSourceList(wk string, s []string) []string {
 	  var files []string
 
           if s[0]=="all" {
-                fileInfo, _ := ioutil.ReadDir(".")
+                fileInfo, _ := ioutil.ReadDir(path.Clean(wk))
                 for _, file := range fileInfo {
                   n:=file.Name()
                   if len(n)>4 {
@@ -62,7 +80,7 @@ func buildSourceList(s []string) []string {
                 }
           }else{
                 for _, fn := range s {
-                        if _, err := os.Stat("./"+fn+".Pkg"); err == nil {
+                        if _, err := os.Stat(path.Clean(wk)+"/"+fn+".Pkg"); err == nil {
                                 files = append(files, fn)
                         }else{
                                 fmt.Println("Package",fn,"Not Found, exiting.")
@@ -73,8 +91,57 @@ func buildSourceList(s []string) []string {
     	  return files
 }
 
+func initWorkspace(wk, le, ds string){
+        fmt.Println("Initializing the workspace", wk)
+
+	e:="\n"
+        if le=="cr" {
+                e="\r"
+                fmt.Println("CR local package line ending style")
+        }else if le=="crlf" {
+		e="\r\n"
+                fmt.Println("CRLF local package line ending style")
+        }else if le=="nl"{
+                fmt.Println("NL local package line ending style")
+        }else{
+                fmt.Println("Line ending style",le,"not understood.")
+                os.Exit(1)
+        }
+
+	if ds=="combined" {
+                fmt.Println("Combined Local Package Directory Style")
+	}else if ds=="flat"{
+                fmt.Println("Flat Local Package Directory Style")
+	}else if ds=="paths"{
+                fmt.Println("Paths Local Package Directory Style")
+	}else{
+		fmt.Println("Local Package Directory Style",ds,"not understood.")
+		os.Exit(1)
+	}
+
+        if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err != nil {
+	        c := []byte("setting,value"+e+"workspace-module-line-ending,"+le+e+"workspace-packages-dirstyle,"+ds+e)
+	        err := ioutil.WriteFile(path.Clean(wk)+"/Packaging.csv", c, 0644)
+	        if err != nil{
+                        fmt.Println("Error Creating Packaging.csv file.")
+			os.Exit(1)
+		}else{
+                	fmt.Println("Created Packaging.csv file.")
+		}
+        }else{
+                fmt.Println("Packaging.csv already exists in",wk,"exiting.")
+                os.Exit(1)
+        }
+
+}
+
 func main() {
 	
+        lePtr := flag.String("e", "cr", "Local Module Line Ending Style (cr|crlf|nl)")
+        dsPtr := flag.String("s", "combined", "Local Package Directory Style (combined|flat|paths)")
+        wkPtr := flag.String("d", "./", "workspace location")
+
+
 	inFilePtr := flag.String("i", "-", "input file")
 	aMessagePtr := flag.String("a", "signed", "attest message")
 	formatPtr := flag.String("f", "oberon", "attest comment style")
@@ -87,6 +154,7 @@ func main() {
 	flag.Parse()
 
 	
+	
 
 	iam := filepath.Base(os.Args[0])
 	if iam == "acheck" {
@@ -97,49 +165,75 @@ func main() {
 	tail:= flag.Args()
 	var contents []byte
 
-        if len(tail)>1 {
+        if len(tail)==1 {
+          if tail[0]=="init"{
+                initWorkspace(*wkPtr,*lePtr,*dsPtr)
+          }
+        }else if len(tail)>1 {
 
-	  sPkgs := buildSourceList(strings.Split(tail[1],","))
+          WSV := getWorkspaceSettings(*wkPtr)
+	  fmt.Println(WSV)
 
-	  fmt.Println(sPkgs)
+          if tail[0]=="addrepo"{
+                sPkgs := buildSourceList(*wkPtr,[]string{"all"})
+                nPkgs := strings.Split(tail[1],",")
+                if len(nPkgs)!=1{
+                        fmt.Println("Only enroll one package at a time")
+                }else{
+                        fmt.Println("Enrolling",nPkgs[0],sPkgs)
+                }
+          }else if tail[0]=="enroll"{
+          	sPkgs := buildSourceList(*wkPtr,[]string{"all"})
+          	nPkgs := strings.Split(tail[1],",")
+          	if len(nPkgs)!=1{
+                	fmt.Println("Only enroll one package at a time")
+          	}else{
+          		fmt.Println("Enrolling",nPkgs[0],sPkgs)
+          	}
+	  }else{
 
-	  for _, p := range sPkgs {
+	    sPkgs := buildSourceList(*wkPtr,strings.Split(tail[1],","))
 
-            if tail[0]=="status"{
+	    fmt.Println(sPkgs)
+
+	    for _, p := range sPkgs {
+
+              if tail[0]=="status"{
 			contents, _ = ioutil.ReadFile(p+".Pkg")
                 	fmt.Println("Status of", p,":")
 			fmt.Println(string(contents))
 		
-            }else if tail[0]=="latest"{
+              }else if tail[0]=="latest"{
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
                  
-            }else if tail[0]=="updates"{
+              }else if tail[0]=="updates"{
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
                 
-            }else if tail[0]=="exact"{
+              }else if tail[0]=="exact"{
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
                 
-            }else if tail[0]=="provider"{
+              }else if tail[0]=="provider"{
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 
-            }else{
+              }else{
                 fmt.Println(tail[0]," means what?")
-            }
+              }
+	    }
 	  }
 	}else{
 	  fmt.Println("Usage: get <command> <package> [options...]\n try: status latest dependencies")
 	}
 
 	if(1==2){
-		fmt.Println(contents,*inFilePtr,*aMessagePtr,*formatPtr,*pkeyPtr,*bkeyPtr,*tkeysPtr,*checkPtr,*rkeyPtr)
+		fmt.Println(*lePtr,*dsPtr,contents,*inFilePtr,*aMessagePtr,*formatPtr,*pkeyPtr,*bkeyPtr,*tkeysPtr,*checkPtr,*rkeyPtr)
 	}
 	
 }
