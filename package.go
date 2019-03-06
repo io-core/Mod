@@ -38,6 +38,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"bytes"
 //	"time"
 )
 
@@ -48,8 +49,16 @@ func min(x, y int) int {
 	return y
 }
 
+func NormalizeNewlines(d []byte) []byte {
+	// replace CR LF \r\n (windows) with LF \n (unix)
+	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
+	// replace CF \r (mac) with LF \n (unix)
+	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
+	return d
+}
+
 func getWorkspaceSettings(wk string) map[string]string{
-	var WSV map[string]string
+	WSV := make(map[string]string)
         fmt.Println("Loading workspace settings", wk)
 	if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err == nil {
 		b, err := ioutil.ReadFile(path.Clean(wk)+"/Packaging.csv")
@@ -57,11 +66,25 @@ func getWorkspaceSettings(wk string) map[string]string{
 			fmt.Print("Couldn't read Packaging.csv")
 			os.Exit(1)
 		}
-		fmt.Println(string(b))
+		a:=strings.Split(string(NormalizeNewlines(b)),"\n")
+                for _,b:= range a[1:]{
+			c:=strings.Split(b,",")
+			if len(c)>1{
+			  WSV[c[0]]=c[1]
+			}
+		}
 	}else{
                 fmt.Println("Workspace",wk,"is not initialized, exiting.")
                 os.Exit(1)	
 	}
+	if _, ok := WSV["workspace-module-line-ending"]; ! ok {
+	        fmt.Println("workspace-module-line-ending missing in workspace settings. exiting.")
+		os.Exit(1)
+	}
+        if _, ok := WSV["workspace-packages-dirstyle"]; ! ok {
+                fmt.Println("workspace-packages-dirstyle missing in workspace settings. exiting.")
+                os.Exit(1)
+        }
 	return WSV
 }
 
