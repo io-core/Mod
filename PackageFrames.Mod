@@ -1,9 +1,9 @@
-MODULE DepSetFrames;
+MODULE PackageFrames;
 
-  IMPORT SYSTEM, Display, Viewers, Input, Fonts, Texts, DepSets, Oberon, MenuViewers;
+  IMPORT SYSTEM, Display, Viewers, Input, Fonts, Texts, Packages, Oberon, MenuViewers;
 
   CONST (*update message ids*)
-    drawdepitem = 1; drawdepitems = 2; drawdepitemd = 3;
+    drawcomponent = 1; drawcomponents = 2; drawcomponentd = 3;
     drawnorm = 4; drawsel = 5; drawdel = 6;
 
     markW = 5;
@@ -18,28 +18,28 @@ MODULE DepSetFrames;
       END ;
 
     FrameDesc* = RECORD (Display.FrameDesc)
-        depset*: DepSets.DepSet;
-        Xg*, Yg*: INTEGER;  (*pos rel to depset origin*)
+        package*: Packages.Package;
+        Xg*, Yg*: INTEGER;  (*pos rel to package origin*)
         X1*, Y1*: INTEGER;  (*right and upper margins*)
         x*, y*, col*: INTEGER;  (*x = X + Xg, y = Y + Yg*)
         marked*, ticked*: BOOLEAN;
         mark*: LocDesc
       END ;
 
-    DrawMsg* = RECORD (DepSets.Msg)
+    DrawMsg* = RECORD (Packages.Msg)
         f*: Frame;
         x*, y*, col*, mode*: INTEGER
       END ;
 
     UpdateMsg = RECORD (Display.FrameMsg)
         id: INTEGER;
-        depset: DepSets.DepSet;
-        depitem: DepSets.DepItem
+        package: Packages.Package;
+        component: Packages.Component
       END ;
 
     ChangedMsg = RECORD (Display.FrameMsg)
         f: Frame;
-        depset: DepSets.DepSet;
+        package: Packages.Package;
         mode: INTEGER
       END ;
 
@@ -58,7 +58,7 @@ MODULE DepSetFrames;
     DispMsg = RECORD (Display.FrameMsg)
         x1, y1, w: INTEGER;
         pat: INTEGER;
-        depset: DepSets.DepSet
+        package: Packages.Package
       END ;
 
   VAR Crosshair*: Oberon.Marker;
@@ -94,8 +94,8 @@ MODULE DepSetFrames;
         INC(y, 16)
       END
     END ;
-    m.f := f; m.x := f.x; m.y := f.y; m.col := 0; m.mode := 0; DepSets.Draw(f.depset, m);
-    IF f.depset.changed THEN SetChangeMark(f, 1) END
+    m.f := f; m.x := f.x; m.y := f.y; m.col := 0; m.mode := 0; Packages.Draw(f.package, m);
+    IF f.package.changed THEN SetChangeMark(f, 1) END
   END Restore;
 
   PROCEDURE FlipCross(X, Y: INTEGER);
@@ -126,37 +126,37 @@ MODULE DepSetFrames;
 
   PROCEDURE Mark(f: Frame; mode: INTEGER);
     VAR CM: ChangedMsg;
-  BEGIN CM.f := f; CM.depset := f.depset; CM.mode := mode; Viewers.Broadcast(CM)
+  BEGIN CM.f := f; CM.package := f.package; CM.mode := mode; Viewers.Broadcast(CM)
   END Mark;
 
   PROCEDURE Draw*(f: Frame);
     VAR UM: UpdateMsg;
-  BEGIN UM.id := drawsel; UM.depset := f.depset; Viewers.Broadcast(UM)
+  BEGIN UM.id := drawsel; UM.package := f.package; Viewers.Broadcast(UM)
   END Draw;
 
   PROCEDURE DrawNorm(f: Frame);
     VAR UM: UpdateMsg;
-  BEGIN UM.id := drawnorm; UM.depset := f.depset; Viewers.Broadcast(UM)
+  BEGIN UM.id := drawnorm; UM.package := f.package; Viewers.Broadcast(UM)
   END DrawNorm;
 
   PROCEDURE Erase*(f: Frame);
     VAR UM: UpdateMsg;
-  BEGIN UM.id := drawdel; UM.depset := f.depset; Viewers.Broadcast(UM); Mark(f, 1)
+  BEGIN UM.id := drawdel; UM.package := f.package; Viewers.Broadcast(UM); Mark(f, 1)
   END Erase;
 
-  PROCEDURE DrawDepItem*(f: Frame; L: DepSets.DepItem);
+  PROCEDURE DrawComponent*(f: Frame; L: Packages.Component);
     VAR UM: UpdateMsg;
-  BEGIN UM.id := drawdepitem; UM.depset := f.depset; UM.depitem := L; Viewers.Broadcast(UM)
-  END DrawDepItem;
+  BEGIN UM.id := drawcomponent; UM.package := f.package; UM.component := L; Viewers.Broadcast(UM)
+  END DrawComponent;
 
-  PROCEDURE EraseDepItem*(f: Frame; I: DepSets.DepItem);
+  PROCEDURE EraseComponent*(f: Frame; C: Packages.Component);
     VAR UM: UpdateMsg;
-  BEGIN UM.id := drawdepitemd; UM.depset := f.depset; UM.depitem := I; Viewers.Broadcast(UM)
-  END EraseDepItem;
+  BEGIN UM.id := drawcomponentd; UM.package := f.package; UM.component := C; Viewers.Broadcast(UM)
+  END EraseComponent;
 
-  PROCEDURE Change*(f: Frame; VAR msg: DepSets.Msg);
+  PROCEDURE Change*(f: Frame; VAR msg: Packages.Msg);
   BEGIN
-    IF F # NIL THEN Erase(f); DepSets.Change(f.depset, msg); Draw(f) END
+    IF F # NIL THEN Erase(f); Packages.Change(f.package, msg); Draw(f) END
   END Change;
 
   PROCEDURE FlipMark(x, y: INTEGER);
@@ -179,21 +179,21 @@ MODULE DepSetFrames;
     VAR UM: UpdateMsg;
   BEGIN
     IF f # NIL THEN
-      UM.id := drawnorm; UM.depset := f.depset; Viewers.Broadcast(UM);
-      DepSets.Deselect(f.depset)
+      UM.id := drawnorm; UM.package := f.package; Viewers.Broadcast(UM);
+      Packages.Deselect(f.package)
     END
   END Deselect;
 
   PROCEDURE Edit(f: Frame; x0, y0: INTEGER; k0: SET);
-    VAR I: DepSets.DepItem;
+    VAR C: Packages.Component;
       x1, y1, w, h, t: INTEGER;
       beg, end, time: LONGINT;
       k1, k2: SET;
       mark, newmark: Location;
       t: Texts.Text;
       Fd: Frame;
-      S: DepSets.DepSet;  
-  BEGIN  k1 := k0; S := F.depset;
+      P: Packages.Package;  
+  BEGIN  k1 := k0; P := F.package;
     REPEAT Input.Mouse(k2, x1, y1); k1 := k1 + k2;
       DEC(x1, (x1-F.x) MOD 4); DEC(y1, (y1-F.y) MOD 4);
       Oberon.DrawMouse(Crosshair, x1, y1)
@@ -212,10 +212,10 @@ MODULE DepSetFrames;
 (*
           IF w < h THEN
             IF y1 < y0 THEN y0 := y1 END ;
-            NewLine(f, S, x0, y0, DepSets.width, h)
+            NewLine(f, P, x0, y0, Packages.width, h)
           ELSE
             IF x1 < x0 THEN x0 := x1 END ;
-            NewLine(f, S, x0, y0, w, DepSets.width)
+            NewLine(f, P, x0, y0, w, Packages.width)
           END ;
 *)
           Draw(f)
@@ -240,9 +240,9 @@ MODULE DepSetFrames;
 (*
         IF (x0 # x1) OR (y0 # y1) THEN
           Fd := This(x1, y1); Erase(f);
-          IF Fd = f THEN DepSets.Move(I, x1-x0, y1-y0)
-          ELSIF (Fd # NIL) & (Fd.depset = S) THEN
-            DepSets.Move(S, (x1-Fd.x-x0+f.x) DIV 4 * 4, (y1-Fd.y-y0+f.y) DIV 4 * 4)
+          IF Fd = f THEN Packages.Move(I, x1-x0, y1-y0)
+          ELSIF (Fd # NIL) & (Fd.package = P) THEN
+            Packages.Move(P, (x1-Fd.x-x0+f.x) DIV 4 * 4, (y1-Fd.y-y0+f.y) DIV 4 * 4)
           END ;
           Draw(f); Mark(f, 1)
         END
@@ -252,14 +252,14 @@ MODULE DepSetFrames;
 (*
         Fd := This(x1, y1);
         IF Fd # NIL THEN DrawNorm(f);
-          IF Fd = f THEN DepSets.Copy(S, S, x1-x0, y1-y0)
+          IF Fd = f THEN Packages.Copy(P, P, x1-x0, y1-y0)
           ELSE Deselect(Fd);
-            DepSets.Copy(S, Fd.depset, (x1-Fd.x-x0+f.x) DIV 4 * 4, (y1-Fd.y-y0+f.y) DIV 4 * 4)
+            Packages.Copy(P, Fd.package, (x1-Fd.x-x0+f.x) DIV 4 * 4, (y1-Fd.y-y0+f.y) DIV 4 * 4)
           END ;
           Draw(Fd); Mark(f, 1)
         END
 *)
-      ELSIF k1 = {1, 0} THEN (*shift depset*)
+      ELSIF k1 = {1, 0} THEN (*shift package*)
 (*        INC(F.Xg, x1-x0); INC(f.Yg, y1-y0); Restore(f) *)
       END
     ELSIF k0 = {0} THEN (*right key: select*)
@@ -267,12 +267,12 @@ MODULE DepSetFrames;
       newcap := NIL;
       IF k1 = {0} THEN Deselect(f) END ;
       IF (ABS(x0-x1) < 7) & (ABS(y0-y1) < 7) THEN
-        I := DepSets.ThisObj(S, x1 - f.x, y1 - f.y);
-        IF I # NIL THEN DepSets.SelectObj(S, I); DrawObj(f, I) END
+        C := Packages.ThisObj(P, x1 - f.x, y1 - f.y);
+        IF C # NIL THEN Packages.SelectObj(P, C); DrawObj(f, C) END
       ELSE
         IF x1 < x0 THEN t := x0; x0 := x1; x1 := t END ;
         IF y1 < y0 THEN t := y0; y0 := y1; y1 := t END ;
-        DepSets.SelectArea(S, x0 - f.x, y0 - f.y, x1 - f.x, y1 - f.y); Draw(f)
+        Packages.SelectArea(P, x0 - f.x, y0 - f.y, x1 - f.x, y1 - f.y); Draw(f)
       END
 *)
     END  
@@ -341,7 +341,7 @@ MODULE DepSetFrames;
           IF m.keys # {} THEN Edit(f, x, y, m.keys) ELSE Oberon.DrawMouse(Crosshair, x, y) END
         ELSIF m.id = Oberon.consume THEN
           IF m.codepoint = 7FH THEN (*DEL*)
-            Erase(f); DepSets.Delete(f.depset); Mark(f, 1)
+            Erase(f); Packages.Delete(f.package); Mark(f, 1)
           (*
           ELSIF (m.codepoint >= 20H) THEN
             IF newcap # NIL THEN InsertChar(f, m.codepoint); Mark(f, 1)
@@ -353,32 +353,32 @@ MODULE DepSetFrames;
           END
         END
       | UpdateMsg:
-          IF m.depset = f.depset THEN
+          IF m.package = f.package THEN
             dM.f := f; dM.x := f.x; dM.y := f.y; dM.col := 0;
-            IF m.id = drawdepitem THEN dM.mode := 0; m.depitem.do.draw(m.depitem, dM)
-            ELSIF m.id = drawdepitems THEN dM.mode := 1; m.depitem.do.draw(m.depitem, dM)
-            ELSIF m.id = drawdepitemd THEN dM.mode := 3; m.depitem.do.draw(m.depitem, dM)
-            ELSIF m.id = drawsel THEN  dM.mode := 0; DepSets.DrawSel(f.depset, dM)
-            ELSIF m.id = drawnorm THEN dM.mode := 2; DepSets.DrawSel(f.depset, dM)
-            ELSIF m.id = drawdel THEN dM.mode := 3; DepSets.DrawSel(f.depset, dM)
+            IF m.id = drawcomponent THEN dM.mode := 0; m.component.do.draw(m.component, dM)
+            ELSIF m.id = drawcomponents THEN dM.mode := 1; m.component.do.draw(m.component, dM)
+            ELSIF m.id = drawcomponentd THEN dM.mode := 3; m.component.do.draw(m.component, dM)
+            ELSIF m.id = drawsel THEN  dM.mode := 0; Packages.DrawSel(f.package, dM)
+            ELSIF m.id = drawnorm THEN dM.mode := 2; Packages.DrawSel(f.package, dM)
+            ELSIF m.id = drawdel THEN dM.mode := 3; Packages.DrawSel(f.package, dM)
             END
           END
       | ChangedMsg:
-          IF m.depset = f.depset THEN SetChangeMark(f, m.mode) END
+          IF m.package = f.package THEN SetChangeMark(f, m.mode) END
       | SelQuery:
-          IF (f.depset.sel # NIL) (* & (m.time < f.depset.time) *) THEN m.f := f(Frame) (* ; m.time := f.depset.time *) END
+          IF (f.package.sel # NIL) (* & (m.time < f.package.time) *) THEN m.f := f(Frame) (* ; m.time := f.package.time *) END
       | FocusQuery: IF f.marked THEN m.f := f END
       | PosQuery: IF (f.X <= m.x) & (m.x < f.X1) & (f.Y <= m.y) & (m.y < f.Y1) THEN m.f := f END
       | DispMsg:
         DM := m;
         x := f.x (*+ newcap.x + newcap.w *); y := f.y (*+ newcap.y*) ;
-        IF (DM.depset = f.depset) & (x >= f.X) & (x + DM.w < f.X1) & (y >= f.Y) & (y < f.Y1) THEN
+        IF (DM.package = f.package) & (x >= f.X) & (x + DM.w < f.X1) & (y >= f.Y) & (y < f.Y1) THEN
           Display.CopyPattern(Oberon.CurCol, DM.pat, x + DM.x1, y + DM.y1, 2);
           (*Display.ReplConst(Display.white, x, y, DM.w, newcap.h, 2)*)
         END
       | Oberon.ControlMsg:
           IF m.id = Oberon.neutralize THEN
-            Oberon.RemoveMarks(f.X, f.Y, f.W, f.H); Defocus(f); DrawNorm(f); DepSets.Deselect(f.depset)
+            Oberon.RemoveMarks(f.X, f.Y, f.W, f.H); Defocus(f); DrawNorm(f); Packages.Deselect(f.package)
           ELSIF m.id = Oberon.defocus THEN Defocus(f)
           END
       | Oberon.SelectionMsg: GetSelection(f, m.text, m.beg, m.end (*, m.time *))
@@ -412,7 +412,7 @@ MODULE DepSetFrames;
     Display.ReplPattern(col, patadr, x, y, w, h, mode)
   END ReplPattern;
 
-  PROCEDURE DrawLine(obj: DepSets.DepItem; VAR m: DepSets.Msg);
+  PROCEDURE DrawLine(obj: Packages.Component; VAR m: Packages.Msg);
 (*
        M.mode = 0: draw according to state,
         = 1: normal -> selected,
@@ -434,7 +434,7 @@ MODULE DepSetFrames;
     END
   END DrawLine;
 
-  PROCEDURE DrawCaption(obj: DepSets.DepItem; VAR m: DepSets.Msg);
+  PROCEDURE DrawCaption(obj: Packages.Component; VAR m: Packages.Msg);
     VAR x, y, dx, x0, x1, y0, y1, w, h, w1, h1, col, codepoint: INTEGER;
       f: Frame;
       pat: INTEGER; fnt: Fonts.Font;
@@ -466,7 +466,7 @@ MODULE DepSetFrames;
   END DrawCaption;
 
 
-  PROCEDURE DrawMacro(obj: DepSets.DepItem; VAR m: DepSets.Msg);
+  PROCEDURE DrawMacro(obj: Packages.Component; VAR m: Packages.Msg);
     VAR x, y, w, h: INTEGER;
       f: Frame; M1: DrawMsg;
   BEGIN
@@ -489,8 +489,8 @@ MODULE DepSetFrames;
 
   (*---------------------------------------------------------------*)
 
-  PROCEDURE Open*(f: Frame; S: DepSets.DepSet);
-  BEGIN f.depset := S; f.Xg := 0; f.Yg := 0; f.x := f.X; f.y := f.Y;
+  PROCEDURE Open*(f: Frame; P: Packages.Package);
+  BEGIN f.package := P; f.Xg := 0; f.Yg := 0; f.x := f.X; f.y := f.Y;
     f.col := Display.black; f.marked := FALSE;
     f.mark.next := NIL; f.ticked := TRUE; f.handle := Handle
   END Open;
@@ -501,6 +501,6 @@ BEGIN DW := Display.Width - 8; DH := Display.Height - 8; CL := 0;
   dotted := SYSTEM.ADR($2004 0000 1111 1111 0000 0000 0000 0000 0000 0000$);
   dotted1 := SYSTEM.ADR($2004 0000 1111 1111 0000 0000 4444 4444 0000 0000$);
   Crosshair.Fade := FlipCross; Crosshair.Draw := FlipCross;
-(*  DepSets.InstallDrawMethods(DrawLine, DrawCaption, DrawMacro) *)
-END DepSetFrames.
+(*  Packages.InstallDrawMethods(DrawLine, DrawCaption, DrawMacro) *)
+END PackageFrames.
 
