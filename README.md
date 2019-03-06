@@ -1,2 +1,2 @@
-# Get
+# Package
 Oberon Package Manager
