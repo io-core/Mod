@@ -177,10 +177,10 @@ func main() {
                 initWorkspace(*wkPtr,*lePtr,*dsPtr)
           }else if tail[0]=="repolist"{
           	_,_,REPOS := getWorkspaceSettings(*wkPtr)
-                for r,_:=range REPOS { fmt.Println(r)}
+                for r,v:=range REPOS { fmt.Println(r,v)}
           }else if tail[0]=="metalist"{
                 _,METAS,_ := getWorkspaceSettings(*wkPtr)
-                for m,_:=range METAS { fmt.Println(m)}
+                for m,v:=range METAS { fmt.Println(m,v)}
           }else{
                 fmt.Println("Incomplete command. exiting.")
 	  }
@@ -190,16 +190,26 @@ func main() {
 	  if 1==2 { fmt.Println(WSV,METAS,REPOS) }
 
           if tail[0]=="addrepo"{
-		if _, ok := REPOS[tail[1]]; ok {
-	                fmt.Println(tail[1],"already in workspace.")
-        	}else{
+		t:=strings.Split(tail[1],":")
+		if len(t)>1{
+		  if _, ok := REPOS[t[0]]; ok {
+	                fmt.Println(t[0],"already in workspace.")
+        	  }else{
 			fmt.Println("adding repo "+tail[1])
+		  }
+		}else{
+			fmt.Println("need repo:path")
 		}
           }else if tail[0]=="addmeta"{
-                if _, ok := METAS[tail[1]]; ok {
-                        fmt.Println(tail[1],"already in workspace.")
-                }else{
+                t:=strings.Split(tail[1],":")
+                if len(t)>1{
+                  if _, ok := METAS[t[0]]; ok {
+                        fmt.Println(t[0],"already in workspace.")
+                  }else{
                         fmt.Println("adding metarepo "+tail[1])
+                  }
+                }else{
+                        fmt.Println("need metarepo:repo")
                 }
           }else if tail[0]=="enroll"{
           	sPkgs := buildSourceList(*wkPtr,[]string{"all"})
