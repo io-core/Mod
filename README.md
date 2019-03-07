@@ -17,22 +17,23 @@ Usage of ./package: package  <flags> commmand
 
   Commands:
 
-    init
-    repolist
-    metalist
-    addrepo <repo:path>
-    addmeta <metarepo:repo>
-    changerepo <repo:path>
-    changemeta <metarepo:repo>
-    delrepo <repo>
-    delmeta <metarepo>
-    checkrepo <repo>
-    enroll <package>
-    status <package|all>
-    latest <package|all>
-    rehash <package|all>
-    addto <package>
-    updates <package|all>
-    exact <package|all>
-    provider <package|all>
+    init                         Initialize a workspace
+    repolist                     List repos configured for workspace
+    metalist                     List metarepos configured for workspace
+    addrepo    <repo:path>       Add a repo (and path to that repo) to the workspace
+    addmeta    <metarepo:repo>   Add a metarepo (and specific repo for the metarepo) to the workspace
+    changerepo <repo:path>       Change the path for an existing repo for the workspace
+    changemeta <metarepo:repo>   Change the specific repo for an existing metarepo for the workspace
+    delrepo    <repo>            Remove a repo from the workspace
+    delmeta    <metarepo>        Remove a metarepo from the workspace
+    checkrepo  <repo>            Check the status of a repo for the workspace
+    enroll     <package>         Enroll (create) a package in the workspace
+    status     <package|all>     Check the status of a package or packages in the workspace and the repos
+    latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
+    rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
+    addto      <package>         Add a local file to the package in the workspace
+    updates    <package|all>     Report updates (from repos) to a package or packages in the workspace
+    exact      <package|all>     Retrieve a specific version of a package from the repos to the workspace
+    provider   <package|all>     Report which repo provided (if any) the package or packages in the workspace
+
 ```
