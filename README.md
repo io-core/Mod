@@ -1,8 +1,8 @@
 # Package
-###Oberon source code package manager
+### Oberon source code package manager
 A tool for managing packages of Oberon (and perhaps Component Pascal, and Modula2) source modules and resource files.
 
-'''
+```
 Usage of ./package: package  <flags> commmand 
 
   Flags:
@@ -34,4 +34,4 @@ Usage of ./package: package  <flags> commmand
     updates <package|all>
     exact <package|all>
     provider <package|all>
-'''
+```
