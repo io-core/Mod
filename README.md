@@ -2,6 +2,7 @@
 ### Oberon source code package manager
 A tool for managing packages of Oberon (and perhaps Component Pascal, and Modula2) source modules and resource files.
 
+# NOT YET FUNCTIONAL --- WORK IN PROGRESS
 ```
 Usage of ./package: package  <flags> commmand 
 
