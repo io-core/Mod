@@ -164,50 +164,6 @@ func checkRepoPath( s string){
 	fmt.Println(s,"looks legit")
 }
 
-func main() {
-	
-        lePtr := flag.String("e", "noch", "Local Module Line Ending Style (cr|crlf|nl|noch)")
-        dsPtr := flag.String("s", "combined", "Local Package Directory Style (combined|flat|paths)")
-        wkPtr := flag.String("d", "./", "workspace location")
-
-	flag.Usage = func() {
-            fmt.Fprintf(os.Stderr, "\nUsage of %s: package %s\n\n", os.Args[0]," <flags> commmand ")
-	    fmt.Println("  Flags:\n")
-            flag.PrintDefaults()
-            fmt.Fprintf(os.Stderr, `
-  Commands:
-
-    init                         Initialize a workspace
-    repolist                     List repos configured for workspace
-    metalist                     List metarepos configured for workspace
-    addrepo    <repo:path>       Add a repo (and path to that repo) to the workspace
-    addmeta    <metarepo:repo>   Add a metarepo (and specific repo for the metarepo) to the workspace
-    changerepo <repo:path>       Change the path for an existing repo for the workspace
-    changemeta <metarepo:repo>   Change the specific repo for an existing metarepo for the workspace
-    delrepo    <repo>            Remove a repo from the workspace
-    delmeta    <metarepo>        Remove a metarepo from the workspace
-    checkrepo  <repo>            Check the status of a repo for the workspace
-    enroll     <package>         Enroll (create) a package in the workspace
-    status     <package|all>     Check the status of a package or packages in the workspace and the repos
-    latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
-    rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
-    addto      <package>         Add a local file to the package in the workspace
-    updates    <package|all>     Report updates (from repos) to a package or packages in the workspace
-    exact      <package|all>     Retrieve a specific version of a package from the repos to the workspace
-    provider   <package|all>     Report which repo provided (if any) the package or packages in the workspace
-`)
-		
-
-	}
-
-	flag.Parse()
-
-	
-	tail:= flag.Args()
-	doCommand( wkPtr, lePtr, dsPtr, tail)
-
-}
-
 func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
 
 
@@ -379,3 +335,49 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
 	}
 
 }
+
+func main() {
+
+        lePtr := flag.String("e", "noch", "Local Module Line Ending Style (cr|crlf|nl|noch)")
+        dsPtr := flag.String("s", "combined", "Local Package Directory Style (combined|flat|paths)")
+        wkPtr := flag.String("d", "./", "workspace location")
+
+        flag.Usage = func() {
+            fmt.Fprintf(os.Stderr, "\nUsage of %s: package %s\n\n", os.Args[0]," <flags> commmand ")
+            fmt.Println("  Flags:\n")
+            flag.PrintDefaults()
+            fmt.Fprintf(os.Stderr, `
+  Commands:
+
+    init                         Initialize a workspace
+    repolist                     List repos configured for workspace
+    metalist                     List metarepos configured for workspace
+    addrepo    <repo:path>       Add a repo (and path to that repo) to the workspace
+    addmeta    <metarepo:repo>   Add a metarepo (and specific repo for the metarepo) to the workspace
+    changerepo <repo:path>       Change the path for an existing repo for the workspace
+    changemeta <metarepo:repo>   Change the specific repo for an existing metarepo for the workspace
+    delrepo    <repo>            Remove a repo from the workspace
+    delmeta    <metarepo>        Remove a metarepo from the workspace
+    checkrepo  <repo>            Check the status of a repo for the workspace
+    enroll     <package>         Enroll (create) a package in the workspace
+    status     <package|all>     Check the status of a package or packages in the workspace and the repos
+    latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
+    rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
+    addto      <package>         Add a local file to the package in the workspace
+    updates    <package|all>     Report updates (from repos) to a package or packages in the workspace
+    exact      <package|all>     Retrieve a specific version of a package from the repos to the workspace
+    provider   <package|all>     Report which repo provided (if any) the package or packages in the workspace
+`)
+
+
+        }
+
+        flag.Parse()
+
+
+        tail:= flag.Args()
+        doCommand( wkPtr, lePtr, dsPtr, tail)
+
+}
+
+
