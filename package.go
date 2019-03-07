@@ -164,42 +164,31 @@ func checkRepoPath( s string){
 	fmt.Println(s,"looks legit")
 }
 
-func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
-
-
-
-	var contents []byte
-
-        if len(tail)==1 {
-          if tail[0]=="init"{
-                initWorkspace(*wkPtr,*lePtr,*dsPtr)
-          }else if tail[0]=="repolist"{
-          	_,_,REPOS := getWorkspaceSettings(*wkPtr)
+func repoList( wk string){
+                _,_,REPOS := getWorkspaceSettings(wk)
                 for r,v:=range REPOS { fmt.Println(r,v)}
-          }else if tail[0]=="metalist"{
-                _,METAS,_ := getWorkspaceSettings(*wkPtr)
+}
+
+func metaList( wk string){
+                _,METAS,_ := getWorkspaceSettings(wk)
                 for m,v:=range METAS { fmt.Println(m,v)}
-          }else{
-                fmt.Println("Incomplete command. exiting.")
-	  }
-        }else if len(tail)>1 {
+}
 
-          WSV,METAS,REPOS := getWorkspaceSettings(*wkPtr)
-	  if 1==2 { fmt.Println(WSV,METAS,REPOS) }
+func addRepo( REPOS map[string]string, tail []string){
+                t:=strings.Split(tail[1],":")
+                if len(t)>1{
+                  if _, ok := REPOS[t[0]]; ok {
+                        fmt.Println(t[0],"already in workspace.")
+                  }else{
+                        checkRepoPath(t[1])
+                        fmt.Println("adding repo "+tail[1])
+                  }
+                }else{
+                        fmt.Println("need repo:path")
+                }
+}
 
-          if tail[0]=="addrepo"{
-		t:=strings.Split(tail[1],":")
-		if len(t)>1{
-		  if _, ok := REPOS[t[0]]; ok {
-	                fmt.Println(t[0],"already in workspace.")
-        	  }else{
-			checkRepoPath(t[1])
-			fmt.Println("adding repo "+tail[1])
-		  }
-		}else{
-			fmt.Println("need repo:path")
-		}
-          }else if tail[0]=="addmeta"{
+func addMeta( REPOS, METAS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := METAS[t[0]]; ok {
@@ -208,13 +197,15 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
                           if _, ok := REPOS[t[1]]; ! ok {
                                 fmt.Println(t[1],"not in workspace.")
                           }else{
-	                        fmt.Println("adding metarepo "+tail[1])
-			  }
+                                fmt.Println("adding metarepo "+tail[1])
+                          }     
                   }
                 }else{
                         fmt.Println("need metarepo:repo")
-                }
-          }else if tail[0]=="changerepo"{
+                }       
+}
+
+func changeRepo( REPOS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := REPOS[t[0]]; ! ok {
@@ -226,112 +217,154 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
                 }else{
                         fmt.Println("need repo:path")
                 }
-          }else if tail[0]=="changemeta"{
+}
+
+func changeMeta( REPOS, METAS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := METAS[t[0]]; ! ok {
                         fmt.Println(t[0],"not in workspace.")
                   }else{
-	                  if _, ok := REPOS[t[1]]; ! ok {
-	                        fmt.Println(t[1],"not in workspace.")
-	                  }else{
-	                        fmt.Println("updated metarepo "+tail[1])
-			  }
+                          if _, ok := REPOS[t[1]]; ! ok {
+                                fmt.Println(t[1],"not in workspace.")
+                          }else{
+                                fmt.Println("updated metarepo "+tail[1])
+                          }
                   }
                 }else{
                         fmt.Println("need metarepo:repo")
                 }
-          }else if tail[0]=="delrepo"{
-                t:=tail[1]
-                
+}
+
+func delRepo( REPOS map[string]string, tail []string){
+                t:=tail[1]                 
                   if _, ok := REPOS[t]; ! ok {
                         fmt.Println(t,"not in workspace.")
                   }else{
                         fmt.Println("removing repo "+tail[1])
-                  }
-                
-          }else if tail[0]=="delmeta"{
+                  }     
+}
+
+func delMeta( METAS map[string]string, tail []string){
                 t:=tail[1]
-                
                   if _, ok := METAS[t]; ! ok {
                         fmt.Println(t,"not in workspace.")
                   }else{
                         fmt.Println("removing metarepo "+tail[1])
                   }
-               
-          }else if tail[0]=="checkrepo"{
-                t:=tail[1]
+}
 
+func checkRepo( REPOS, METAS map[string]string, tail []string){
+                t:=tail[1]
                   if r, ok := REPOS[t]; ! ok {
-                  	if r, ok := METAS[t]; ! ok {
-                  	      fmt.Println(t,"not in workspace.")
-                  	}else{
-			      v, _:= REPOS[r]
-                  	      fmt.Println("checking repo "+v)
-                  	}
+                        if r, ok := METAS[t]; ! ok {
+                              fmt.Println(t,"not in workspace.")
+                        }else{
+                              v, _:= REPOS[r]
+                              fmt.Println("checking repo "+v)
+                        }
                   }else{
                         fmt.Println("checking repo "+r)
                   }
+}
 
+func enrollPackage( wkPtr *string, tail []string){
+                sPkgs := buildSourceList(*wkPtr,[]string{"all"})
+                nPkgs := strings.Split(tail[1],",")
+                if len(nPkgs)!=1{
+                        fmt.Println("Only enroll one package at a time")
+                }else{
+                        fmt.Println("Enrolling",nPkgs[0],sPkgs)
+                }
+}
 
-          }else if tail[0]=="enroll"{
-          	sPkgs := buildSourceList(*wkPtr,[]string{"all"})
-          	nPkgs := strings.Split(tail[1],",")
-          	if len(nPkgs)!=1{
-                	fmt.Println("Only enroll one package at a time")
-          	}else{
-          		fmt.Println("Enrolling",nPkgs[0],sPkgs)
-          	}
-	  }else{
-
-	    sPkgs := buildSourceList(*wkPtr,strings.Split(tail[1],","))
-
-	    fmt.Println(sPkgs)
-
-	    for _, p := range sPkgs {
-
-              if tail[0]=="status"{
-			contents, _ = ioutil.ReadFile(p+".Pkg")
-                	fmt.Println("Status of", p,":")
-			fmt.Println(string(contents))
-		
-              }else if tail[0]=="latest"{
+func packageStatus(p string){
+        var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
-                 
-              }else if tail[0]=="rehash"{
+}
+
+func latestPackage(p string){
+        var contents []byte
+                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        fmt.Println("Status of", p,":")
+                        fmt.Println(string(contents))
+}
+
+func rehashPackage(p string){
+        var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Rehashing", p,":")
                         fmt.Println(string(contents))
+}
 
-              }else if tail[0]=="addto"{
+func addtoPackage(p string){
+        var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Adding to", p,":")
                         fmt.Println(string(contents))
+}
 
-              }else if tail[0]=="updates"{
+func packageUpdates(p string){
+        var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
-                
-              }else if tail[0]=="exact"{
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
-                        fmt.Println("Status of", p,":")
-                        fmt.Println(string(contents))
-                
-              }else if tail[0]=="provider"{
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
-                        fmt.Println("Status of", p,":")
-                        fmt.Println(string(contents))
+}
 
+func exactPackage(p string){
+        var contents []byte
+                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        fmt.Println("Status of", p,":")
+                        fmt.Println(string(contents))
+}
+
+func packageProvider(p string){
+        var contents []byte
+                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        fmt.Println("Status of", p,":")
+                        fmt.Println(string(contents))
+}
+
+
+
+func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
+
+        if len(tail)==1 {
+                if tail[0] == "init"     { initWorkspace(*wkPtr,*lePtr,*dsPtr)
+          }else if tail[0] == "repolist" { repoList(*wkPtr)
+          }else if tail[0] == "metalist" { metaList(*wkPtr)
+          }else{
+                fmt.Println("Incomplete command. exiting.")
+	  }
+        }else if len(tail)>1 {
+          _,METAS,REPOS := getWorkspaceSettings(*wkPtr)
+                if tail[0] == "addrepo"   { addRepo(REPOS,tail)
+          }else if tail[0] == "addmeta"   { addMeta(REPOS,METAS,tail)
+          }else if tail[0] == "changerepo"{ changeRepo(REPOS,tail)
+          }else if tail[0] == "changemeta"{ changeMeta(REPOS,METAS,tail)
+          }else if tail[0] == "delrepo"   { delRepo(REPOS,tail)
+          }else if tail[0] == "delmeta"   { delMeta(METAS,tail)
+          }else if tail[0] == "checkrepo" { checkRepo(REPOS,METAS,tail)
+          }else if tail[0] == "enroll"    { enrollPackage(wkPtr,tail)
+	  }else{
+	    sPkgs := buildSourceList(*wkPtr,strings.Split(tail[1],","))
+	    for _, p := range sPkgs {
+                    if tail[0]=="status"  { packageStatus(p)
+              }else if tail[0]=="latest"  { latestPackage(p)
+              }else if tail[0]=="rehash"  { rehashPackage(p)
+              }else if tail[0]=="addto"   { addtoPackage(p)
+              }else if tail[0]=="updates" { packageUpdates(p)
+              }else if tail[0]=="exact"   { exactPackage(p)
+              }else if tail[0]=="provider"{ packageProvider(p)
               }else{
                 fmt.Println(tail[0]," means what?")
               }
 	    }
 	  }
 	}else{
-	  fmt.Println("Usage: get <command> <package> [options...]\n try: status latest dependencies")
+	  flag.Usage()
 	}
 
 }
