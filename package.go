@@ -39,10 +39,10 @@ func min(x, y int) int {
 	return y
 }
 
-func NormalizeNewlines(d []byte) []byte {
-	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
-	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
-	return d
+func nnl(b []byte) []byte {
+	b = bytes.Replace(b, []byte{13, 10}, []byte{10}, -1)
+	b = bytes.Replace(b, []byte{13}, []byte{10}, -1)
+	return b
 }
 
 func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[string]string){
@@ -56,7 +56,7 @@ func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[st
 			fmt.Print("Couldn't read Packaging.csv")
 			os.Exit(1)
 		}
-		a:=strings.Split(string(NormalizeNewlines(b)),"\n")
+		a:=strings.Split(string(nnl(b)),"\n")
                 for _,b:= range a[1:]{
 			c:=strings.Split(b,",")
 			if len(c)>1{
@@ -160,11 +160,44 @@ func initWorkspace(wk, le, ds string){
 
 }
 
+func checkRepoPath( s string){
+	fmt.Println(s,"looks legit")
+}
+
 func main() {
 	
-        lePtr := flag.String("e", "cr", "Local Module Line Ending Style (cr|crlf|nl)")
+        lePtr := flag.String("e", "noch", "Local Module Line Ending Style (cr|crlf|nl|noch)")
         dsPtr := flag.String("s", "combined", "Local Package Directory Style (combined|flat|paths)")
         wkPtr := flag.String("d", "./", "workspace location")
+
+	flag.Usage = func() {
+            fmt.Fprintf(os.Stderr, "\nUsage of %s: package %s\n\n", os.Args[0]," <flags> commmand ")
+	    fmt.Println("  Flags:\n")
+            flag.PrintDefaults()
+            fmt.Fprintf(os.Stderr, `
+  Commands:
+
+    init
+    repolist
+    metalist
+    addrepo <repo:path>
+    addmeta <metarepo:repo>
+    changerepo <repo:path>
+    changemeta <metarepo:repo>
+    delrepo <repo>
+    delmeta <metarepo>
+    checkrepo <repo>
+    enroll <package>
+    status <package|all>
+    latest <package|all>
+    rehash <package|all>
+    addto <package>
+    updates <package|all>
+    exact <package|all>
+    provider <package|all>\n`)
+		fmt.Println()
+
+	}
 
 	flag.Parse()
 
@@ -195,6 +228,7 @@ func main() {
 		  if _, ok := REPOS[t[0]]; ok {
 	                fmt.Println(t[0],"already in workspace.")
         	  }else{
+			checkRepoPath(t[1])
 			fmt.Println("adding repo "+tail[1])
 		  }
 		}else{
@@ -206,7 +240,11 @@ func main() {
                   if _, ok := METAS[t[0]]; ok {
                         fmt.Println(t[0],"already in workspace.")
                   }else{
-                        fmt.Println("adding metarepo "+tail[1])
+                          if _, ok := REPOS[t[1]]; ! ok {
+                                fmt.Println(t[1],"not in workspace.")
+                          }else{
+	                        fmt.Println("adding metarepo "+tail[1])
+			  }
                   }
                 }else{
                         fmt.Println("need metarepo:repo")
@@ -217,6 +255,7 @@ func main() {
                   if _, ok := REPOS[t[0]]; ! ok {
                         fmt.Println(t[0],"not in workspace.")
                   }else{
+                        checkRepoPath(t[1])
                         fmt.Println("updated repo "+tail[1])
                   }
                 }else{
@@ -228,7 +267,11 @@ func main() {
                   if _, ok := METAS[t[0]]; ! ok {
                         fmt.Println(t[0],"not in workspace.")
                   }else{
-                        fmt.Println("updated metarepo "+tail[1])
+	                  if _, ok := REPOS[t[1]]; ! ok {
+	                        fmt.Println(t[1],"not in workspace.")
+	                  }else{
+	                        fmt.Println("updated metarepo "+tail[1])
+			  }
                   }
                 }else{
                         fmt.Println("need metarepo:repo")
@@ -251,6 +294,21 @@ func main() {
                         fmt.Println("removing metarepo "+tail[1])
                   }
                
+          }else if tail[0]=="checkrepo"{
+                t:=tail[1]
+
+                  if r, ok := REPOS[t]; ! ok {
+                  	if r, ok := METAS[t]; ! ok {
+                  	      fmt.Println(t,"not in workspace.")
+                  	}else{
+			      v, _:= REPOS[r]
+                  	      fmt.Println("checking repo "+v)
+                  	}
+                  }else{
+                        fmt.Println("checking repo "+r)
+                  }
+
+
           }else if tail[0]=="enroll"{
           	sPkgs := buildSourceList(*wkPtr,[]string{"all"})
           	nPkgs := strings.Split(tail[1],",")
@@ -277,6 +335,16 @@ func main() {
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
                  
+              }else if tail[0]=="rehash"{
+                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        fmt.Println("Rehashing", p,":")
+                        fmt.Println(string(contents))
+
+              }else if tail[0]=="addto"{
+                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        fmt.Println("Adding to", p,":")
+                        fmt.Println(string(contents))
+
               }else if tail[0]=="updates"{
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
