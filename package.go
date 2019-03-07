@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2018 the io-core authors
+// Copyright (c) 2019 the io-core authors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,14 @@ import (
 	"path"
 	"strings"
 	"bytes"
+	"time"
 )
+
+func check(e error) {
+    if e != nil {
+        panic(e)
+    }
+}
 
 func min(x, y int) int {
 	if x < y {
@@ -49,7 +56,6 @@ func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[st
 	WSV := make(map[string]string)
         REPOS := make(map[string]string)
         METAS := make(map[string]string)
-//        fmt.Println("Loading workspace settings", wk)
 	if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err == nil {
 		b, err := ioutil.ReadFile(path.Clean(wk)+"/Packaging.csv")
 		if err != nil {
@@ -88,6 +94,31 @@ func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[st
                 os.Exit(1)
         }
 	return WSV, METAS, REPOS
+}
+
+func putWorkspaceSettings(wk string, WSV, REPOS, METAS map[string]string){
+	t := time.Now()
+	err := os.Rename(path.Clean(wk)+"/Packaging.csv",path.Clean(wk)+"/Packaging.csv."+t.Format("20060102150405"))
+	check(err)
+	f, err := os.Create(path.Clean(wk)+"/Packaging.csv"); check(err)
+	defer f.Close()
+        _, err = f.WriteString("setting,value\n"); check(err)
+	for k,v := range WSV {
+		//  println(k+","+v)
+		_, err := f.WriteString(k+","+v+"\n"); check(err)
+	}
+        for k,v := range REPOS {
+        	//  println("repo,"+k+":"+v)
+        	_, err := f.WriteString("repo,"+k+":"+v+"\n"); check(err)
+        }
+        for k,v := range METAS {
+        	//  println("meta-repo,"+k+":"+v)
+		_, err := f.WriteString("meta-repo,"+k+":"+v+"\n"); check(err)
+        }
+
+	f.Sync()
+	err = os.Remove(path.Clean(wk)+"/Packaging.csv."+t.Format("20060102150405")); check(err)
+
 }
 
 func buildSourceList(wk string, s []string) []string {
@@ -160,8 +191,16 @@ func initWorkspace(wk, le, ds string){
 
 }
 
-func checkRepoPath( s string){
-	fmt.Println(s,"looks legit")
+func repoPathOK( s string) bool {
+	r:=false
+	t:=strings.Split(s,"/")
+	if len(t)>1 {
+	  fmt.Println(s,"looks legit")
+	  r=true
+	}else{
+          fmt.Println(s,"expecting a path with at least one slash in it")
+	}
+	return r
 }
 
 func repoList( wk string){
@@ -174,14 +213,17 @@ func metaList( wk string){
                 for m,v:=range METAS { fmt.Println(m,v)}
 }
 
-func addRepo( REPOS map[string]string, tail []string){
+func addRepo( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := REPOS[t[0]]; ok {
                         fmt.Println(t[0],"already in workspace.")
                   }else{
-                        checkRepoPath(t[1])
-                        fmt.Println("adding repo "+tail[1])
+                        if repoPathOK(t[1]){
+                          fmt.Println("adding repo "+tail[1])
+			  REPOS[t[0]]=t[1]
+			  putWorkspaceSettings(wk,WSV,REPOS,METAS)
+			}
                   }
                 }else{
                         fmt.Println("need repo:path")
@@ -211,8 +253,9 @@ func changeRepo( REPOS map[string]string, tail []string){
                   if _, ok := REPOS[t[0]]; ! ok {
                         fmt.Println(t[0],"not in workspace.")
                   }else{
-                        checkRepoPath(t[1])
-                        fmt.Println("updated repo "+tail[1])
+                        if repoPathOK(t[1]){
+                          fmt.Println("updated repo "+tail[1])
+			}
                   }
                 }else{
                         fmt.Println("need repo:path")
@@ -339,8 +382,8 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
                 fmt.Println("Incomplete command. exiting.")
 	  }
         }else if len(tail)>1 {
-          _,METAS,REPOS := getWorkspaceSettings(*wkPtr)
-                if tail[0] == "addrepo"   { addRepo(REPOS,tail)
+          WSV,METAS,REPOS := getWorkspaceSettings(*wkPtr)
+                if tail[0] == "addrepo"   { addRepo(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "addmeta"   { addMeta(REPOS,METAS,tail)
           }else if tail[0] == "changerepo"{ changeRepo(REPOS,tail)
           }else if tail[0] == "changemeta"{ changeMeta(REPOS,METAS,tail)
