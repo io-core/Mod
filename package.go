@@ -204,6 +204,14 @@ func main() {
 
 	
 	tail:= flag.Args()
+	doCommand( wkPtr, lePtr, dsPtr, tail)
+
+}
+
+func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
+
+
+
 	var contents []byte
 
         if len(tail)==1 {
