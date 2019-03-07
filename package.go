@@ -211,6 +211,46 @@ func main() {
                 }else{
                         fmt.Println("need metarepo:repo")
                 }
+          }else if tail[0]=="changerepo"{
+                t:=strings.Split(tail[1],":")
+                if len(t)>1{
+                  if _, ok := REPOS[t[0]]; ! ok {
+                        fmt.Println(t[0],"not in workspace.")
+                  }else{
+                        fmt.Println("updated repo "+tail[1])
+                  }
+                }else{
+                        fmt.Println("need repo:path")
+                }
+          }else if tail[0]=="changemeta"{
+                t:=strings.Split(tail[1],":")
+                if len(t)>1{
+                  if _, ok := METAS[t[0]]; ! ok {
+                        fmt.Println(t[0],"not in workspace.")
+                  }else{
+                        fmt.Println("updated metarepo "+tail[1])
+                  }
+                }else{
+                        fmt.Println("need metarepo:repo")
+                }
+          }else if tail[0]=="delrepo"{
+                t:=tail[1]
+                
+                  if _, ok := REPOS[t]; ! ok {
+                        fmt.Println(t,"not in workspace.")
+                  }else{
+                        fmt.Println("removing repo "+tail[1])
+                  }
+                
+          }else if tail[0]=="delmeta"{
+                t:=tail[1]
+                
+                  if _, ok := METAS[t]; ! ok {
+                        fmt.Println(t,"not in workspace.")
+                  }else{
+                        fmt.Println("removing metarepo "+tail[1])
+                  }
+               
           }else if tail[0]=="enroll"{
           	sPkgs := buildSourceList(*wkPtr,[]string{"all"})
           	nPkgs := strings.Split(tail[1],",")
