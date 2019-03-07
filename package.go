@@ -230,7 +230,7 @@ func addRepo( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 }
 }
 
-func addMeta( REPOS, METAS map[string]string, tail []string){
+func addMeta( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := METAS[t[0]]; ok {
@@ -240,6 +240,8 @@ func addMeta( REPOS, METAS map[string]string, tail []string){
                                 fmt.Println(t[1],"not in workspace.")
                           }else{
                                 fmt.Println("adding metarepo "+tail[1])
+                          	METAS[t[0]]=t[1]
+                          	putWorkspaceSettings(wk,WSV,REPOS,METAS)
                           }     
                   }
                 }else{
@@ -384,7 +386,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
         }else if len(tail)>1 {
           WSV,METAS,REPOS := getWorkspaceSettings(*wkPtr)
                 if tail[0] == "addrepo"   { addRepo(*wkPtr,WSV,REPOS,METAS,tail)
-          }else if tail[0] == "addmeta"   { addMeta(REPOS,METAS,tail)
+          }else if tail[0] == "addmeta"   { addMeta(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "changerepo"{ changeRepo(REPOS,tail)
           }else if tail[0] == "changemeta"{ changeMeta(REPOS,METAS,tail)
           }else if tail[0] == "delrepo"   { delRepo(REPOS,tail)
