@@ -28,6 +28,7 @@ Usage of ./mod: mod  <flags> commmand
     delmeta    <metarepo>        Remove a metarepo from the workspace
     checkrepo  <repo>            Check the status of a repo for the workspace
     enroll     <package>         Enroll (create) a package in the workspace
+    withdraw   <package file(s)> Withdraw (de-register) a package in the workspace with file(s)
     status     <package|all>     Check the status of a package or packages in the workspace and the repos
     latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
     rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
