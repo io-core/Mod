@@ -345,6 +345,16 @@ func enrollPackage( wkPtr *string, tail []string){
                 }
 }
 
+func withdrawPackage( wkPtr *string, tail []string){
+                sPkgs := buildSourceList(*wkPtr,[]string{"all"})
+                nPkgs := strings.Split(tail[1],",")
+                if len(nPkgs)!=1{
+                        fmt.Println("Only withdraw one package at a time")
+                }else{
+                        fmt.Println("Withdrawing",nPkgs[0],sPkgs)
+                }
+}
+
 func packageStatus(p string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
@@ -416,6 +426,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "delmeta"   { delMeta(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "checkrepo" { checkRepo(REPOS,METAS,tail)
           }else if tail[0] == "enroll"    { enrollPackage(wkPtr,tail)
+          }else if tail[0] == "withdraw"  { withdrawPackage(wkPtr,tail)
 	  }else{
 	    sPkgs := buildSourceList(*wkPtr,strings.Split(tail[1],","))
 	    for _, p := range sPkgs {
@@ -461,7 +472,8 @@ func main() {
     delrepo    <repo>            Remove a repo from the workspace
     delmeta    <metarepo>        Remove a metarepo from the workspace
     checkrepo  <repo>            Check the status of a repo for the workspace
-    enroll     <package file(s)> Enroll (create) a package in the workspace with file(s)
+    enroll     <package file(s)> Enroll (register) a package in the workspace with file(s)
+    withdraw   <package file(s)> Withdraw (de-register) a package in the workspace with file(s)
     status     <package|all>     Check the status of a package or packages in the workspace and the repos
     latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
     rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
