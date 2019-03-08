@@ -203,6 +203,11 @@ func repoPathOK( s string) bool {
 	return r
 }
 
+func listPackages( wk string){
+     //           _,_,REPOS := getWorkspaceSettings(wk)
+     //           for r,v:=range REPOS { fmt.Println(r,v)}
+}
+
 func repoList( wk string){
                 _,_,REPOS := getWorkspaceSettings(wk)
                 for r,v:=range REPOS { fmt.Println(r,v)}
@@ -395,6 +400,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
 
         if len(tail)==1 {
                 if tail[0] == "init"     { initWorkspace(*wkPtr,*lePtr,*dsPtr)
+          }else if tail[0] == "list"     { listPackages(*wkPtr)
           }else if tail[0] == "repolist" { repoList(*wkPtr)
           }else if tail[0] == "metalist" { metaList(*wkPtr)
           }else{
@@ -438,13 +444,14 @@ func main() {
         wkPtr := flag.String("d", "./", "workspace location")
 
         flag.Usage = func() {
-            fmt.Fprintf(os.Stderr, "\nUsage of %s: package %s\n\n", os.Args[0]," <flags> commmand ")
+            fmt.Fprintf(os.Stderr, "\nUsage of %s: mod %s\n\n", os.Args[0]," <flags> commmand ")
             fmt.Println("  Flags:\n")
             flag.PrintDefaults()
             fmt.Fprintf(os.Stderr, `
   Commands:
 
     init                         Initialize a workspace
+    list                         List the packages in the workspace
     repolist                     List repos configured for workspace
     metalist                     List metarepos configured for workspace
     addrepo    <repo:path>       Add a repo (and path to that repo) to the workspace
@@ -454,11 +461,11 @@ func main() {
     delrepo    <repo>            Remove a repo from the workspace
     delmeta    <metarepo>        Remove a metarepo from the workspace
     checkrepo  <repo>            Check the status of a repo for the workspace
-    enroll     <package>         Enroll (create) a package in the workspace
+    enroll     <package file(s)> Enroll (create) a package in the workspace with file(s)
     status     <package|all>     Check the status of a package or packages in the workspace and the repos
     latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
     rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
-    addto      <package>         Add a local file to the package in the workspace
+    addto      <package file(s)> Add local file(s) to the package in the workspace
     updates    <package|all>     Report updates (from repos) to a package or packages in the workspace
     exact      <package|all>     Retrieve a specific version of a package from the repos to the workspace
     provider   <package|all>     Report which repo provided (if any) the package or packages in the workspace
