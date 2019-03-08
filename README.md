@@ -4,7 +4,7 @@ A tool for managing packages of Oberon (and perhaps Component Pascal, and Modula
 
 # NOT YET FUNCTIONAL --- WORK IN PROGRESS
 ```
-Usage of ./package: package  <flags> commmand 
+Usage of ./mod: mod  <flags> commmand 
 
   Flags:
 
