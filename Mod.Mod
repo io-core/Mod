@@ -1,9 +1,9 @@
-MODULE Package;
+MODULE Mod;
 
   IMPORT Files, Fonts, Viewers, Texts, Oberon,
     TextFrames, MenuViewers, Packages, PackageFrames;
 
-  CONST Menu = "System.Close  System.Copy  System.Grow  Package.Delete  Package.Ticks  Package.Restore  Package.Store";
+  CONST Menu = "System.Close  System.Copy  System.Grow  Mod.Delete  Mod.Ticks  Mod.Restore  Mod.Store";
 
   VAR W: Texts.Writer;
 
@@ -151,7 +151,7 @@ MODULE Package;
     END
   END Macro;
 *)
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "Package - CP 1.3.2019");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "Mod - CP 3.7.2019");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
-END Package.
+END Mod.
 
