@@ -249,14 +249,16 @@ func addMeta( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 }       
 }
 
-func changeRepo( REPOS map[string]string, tail []string){
+func changeRepo( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := REPOS[t[0]]; ! ok {
                         fmt.Println(t[0],"not in workspace.")
                   }else{
                         if repoPathOK(t[1]){
-                          fmt.Println("updated repo "+tail[1])
+                          fmt.Println("updating repo "+tail[1])
+                          REPOS[t[0]]=t[1]
+                          putWorkspaceSettings(wk,WSV,REPOS,METAS)
 			}
                   }
                 }else{
@@ -264,7 +266,7 @@ func changeRepo( REPOS map[string]string, tail []string){
                 }
 }
 
-func changeMeta( REPOS, METAS map[string]string, tail []string){
+func changeMeta( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 t:=strings.Split(tail[1],":")
                 if len(t)>1{
                   if _, ok := METAS[t[0]]; ! ok {
@@ -273,7 +275,9 @@ func changeMeta( REPOS, METAS map[string]string, tail []string){
                           if _, ok := REPOS[t[1]]; ! ok {
                                 fmt.Println(t[1],"not in workspace.")
                           }else{
-                                fmt.Println("updated metarepo "+tail[1])
+                                fmt.Println("updating metarepo "+tail[1])
+                                METAS[t[0]]=t[1]
+                                putWorkspaceSettings(wk,WSV,REPOS,METAS)
                           }
                   }
                 }else{
@@ -281,21 +285,34 @@ func changeMeta( REPOS, METAS map[string]string, tail []string){
                 }
 }
 
-func delRepo( REPOS map[string]string, tail []string){
+func delRepo( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 t:=tail[1]                 
                   if _, ok := REPOS[t]; ! ok {
                         fmt.Println(t,"not in workspace.")
                   }else{
-                        fmt.Println("removing repo "+tail[1])
+			metahas:=""
+			for m,x:=range METAS{
+				if x == t { metahas = m }
+			}
+			if metahas == ""{
+                        	fmt.Println("removing repo "+tail[1])
+                                delete(REPOS,t)
+                                putWorkspaceSettings(wk,WSV,REPOS,METAS)
+
+			}else{
+				fmt.Println("metarepo "+metahas+" refers to "+t+". Please adjust the metarepo first.")
+			}
                   }     
 }
 
-func delMeta( METAS map[string]string, tail []string){
+func delMeta( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                 t:=tail[1]
                   if _, ok := METAS[t]; ! ok {
                         fmt.Println(t,"not in workspace.")
                   }else{
                         fmt.Println("removing metarepo "+tail[1])
+			delete(METAS,t)
+			putWorkspaceSettings(wk,WSV,REPOS,METAS)
                   }
 }
 
@@ -387,10 +404,10 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           WSV,METAS,REPOS := getWorkspaceSettings(*wkPtr)
                 if tail[0] == "addrepo"   { addRepo(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "addmeta"   { addMeta(*wkPtr,WSV,REPOS,METAS,tail)
-          }else if tail[0] == "changerepo"{ changeRepo(REPOS,tail)
-          }else if tail[0] == "changemeta"{ changeMeta(REPOS,METAS,tail)
-          }else if tail[0] == "delrepo"   { delRepo(REPOS,tail)
-          }else if tail[0] == "delmeta"   { delMeta(METAS,tail)
+          }else if tail[0] == "changerepo"{ changeRepo(*wkPtr,WSV,REPOS,METAS,tail)
+          }else if tail[0] == "changemeta"{ changeMeta(*wkPtr,WSV,REPOS,METAS,tail)
+          }else if tail[0] == "delrepo"   { delRepo(*wkPtr,WSV,REPOS,METAS,tail)
+          }else if tail[0] == "delmeta"   { delMeta(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "checkrepo" { checkRepo(REPOS,METAS,tail)
           }else if tail[0] == "enroll"    { enrollPackage(wkPtr,tail)
 	  }else{
