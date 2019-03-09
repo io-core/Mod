@@ -121,23 +121,37 @@ func putWorkspaceSettings(wk string, WSV, REPOS, METAS map[string]string){
 
 }
 
-func buildSourceList(wk string, s []string) []string {
-	  var files []string
+func buildSourceList(wk string, WSV map[string]string,s []string) map[string]string {
+	  files := make(map[string]string)
+
+	  dstyle, _ := WSV["workspace-packages-dirstyle"]
+
+	  
 
           if s[0]=="all" {
                 fileInfo, _ := ioutil.ReadDir(path.Clean(wk))
                 for _, file := range fileInfo {
-                  n:=file.Name()
-                  if len(n)>4 {
-                    if n[len(n)-4:]==".Pkg" {
-                      files = append(files, n[0:len(n)-4])
-                    }
-                  }
+		  if dstyle=="flat"{
+		    if file.IsDir() {
+			n:=file.Name()
+                        if _, err := os.Stat(path.Clean(wk)+"/"+n+"/"+n+".Pkg"); err == nil {
+	                      files[n] = path.Clean(wk)+"/"+n
+		        }
+		    }
+		  }else if dstyle=="paths"{
+		  }else{ // dstyle=="combined"
+                          n:=file.Name()
+                          if len(n)>4 {
+                            if n[len(n)-4:]==".Pkg" {
+                              files[n[0:len(n)-4]] = path.Clean(wk)
+                            }
+                          }
+		  }
                 }
           }else{
                 for _, fn := range s {
                         if _, err := os.Stat(path.Clean(wk)+"/"+fn+".Pkg"); err == nil {
-                                files = append(files, fn)
+                                files[fn]=fn+".Pkg"
                         }else{
                                 fmt.Println("Package",fn,"Not Found, exiting.")
                                 os.Exit(1)
@@ -147,22 +161,25 @@ func buildSourceList(wk string, s []string) []string {
     	  return files
 }
 
+func leStr( le string) string {
+	var e string
+        if le=="cr" {
+                e="\r"
+        }else if le=="crlf" {
+                e="\r\n"
+        }else if le=="nl"{
+		e="\n"
+        }else{  
+                fmt.Println("Line ending style",le,"not understood.")
+                os.Exit(1)
+        }       
+	return e
+}
+
 func initWorkspace(wk, le, ds string){
         fmt.Println("Initializing the workspace", wk)
 
-	e:="\n"
-        if le=="cr" {
-                e="\r"
-                fmt.Println("CR local package line ending style")
-        }else if le=="crlf" {
-		e="\r\n"
-                fmt.Println("CRLF local package line ending style")
-        }else if le=="nl"{
-                fmt.Println("NL local package line ending style")
-        }else{
-                fmt.Println("Line ending style",le,"not understood.")
-                os.Exit(1)
-        }
+	e:=leStr(le)
 
 	if ds=="combined" {
                 fmt.Println("Combined Local Package Directory Style")
@@ -203,7 +220,11 @@ func repoPathOK( s string) bool {
 	return r
 }
 
-func listPackages( wk string){
+func listPackages(  wkPtr *string, WSV map[string]string, tail []string){
+        sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
+	for i,_ := range sPkgs{
+		fmt.Println(i)
+	}
      //           _,_,REPOS := getWorkspaceSettings(wk)
      //           for r,v:=range REPOS { fmt.Println(r,v)}
 }
@@ -335,23 +356,73 @@ func checkRepo( REPOS, METAS map[string]string, tail []string){
                   }
 }
 
-func enrollPackage( wkPtr *string, tail []string){
-                sPkgs := buildSourceList(*wkPtr,[]string{"all"})
+//package [core]/Mod v0.1.0
+//
+//requires (
+//        [core]/System v5.0.0
+//)
+//
+//provides (
+//	PackageFrames.Mod  Mod.Mod  Packages.Mod  Resources.Mod
+//)
+
+
+func enrollPackage( wkPtr *string, WSV map[string]string, tail []string){
+                sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
                 nPkgs := strings.Split(tail[1],",")
                 if len(nPkgs)!=1{
                         fmt.Println("Only enroll one package at a time")
                 }else{
-                        fmt.Println("Enrolling",nPkgs[0],sPkgs)
+                        if _, ok := sPkgs[nPkgs[0]]; ! ok {       
+                                fmt.Println("Enrolling",nPkgs[0],sPkgs)
+				le,_:=WSV["workspace-module-line-ending"]
+				e:=leStr(le)
+                                ds,_:=WSV["workspace-packages-dirstyle"]
+
+		                c :=        "package ["+nPkgs[0]+"] v0.0.0"+e+e+
+                                            "requires ("+e+
+					    ")"+e+e+
+                                            "provides ("+e+
+                                            ")"+e
+
+                  		if ds=="flat"{
+		                	err := ioutil.WriteFile(path.Clean(*wkPtr)+"/"+nPkgs[0]+
+						"/"+nPkgs[0]+".Pkg", []byte(c), 0644)
+		                	if err != nil{
+		                	        fmt.Println("Error Enrolling Package.")
+		                	        os.Exit(1)
+		                	}else{  
+		                	        fmt.Println("Enrolled.")
+		                	}       
+                                }else if ds=="paths"{
+                                }else{ // ds=="combined"
+                                        err := ioutil.WriteFile(path.Clean(*wkPtr)+
+                                                "/"+nPkgs[0]+".Pkg", []byte(c), 0644)
+                                        if err != nil{
+                                                fmt.Println("Error Enrolling Package.")
+                                                os.Exit(1)
+                                        }else{
+                                                fmt.Println("Enrolled.")
+                                        }     
+                                }
+
+                        }else{  
+                                fmt.Println(nPkgs[0],"already in workspace.")
+                        }
                 }
 }
 
-func withdrawPackage( wkPtr *string, tail []string){
-                sPkgs := buildSourceList(*wkPtr,[]string{"all"})
+func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
+                sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
                 nPkgs := strings.Split(tail[1],",")
                 if len(nPkgs)!=1{
                         fmt.Println("Only withdraw one package at a time")
                 }else{
-                        fmt.Println("Withdrawing",nPkgs[0],sPkgs)
+			if _, ok := sPkgs[nPkgs[0]]; ok {                        	
+                        	fmt.Println("Withdrawing",nPkgs[0],sPkgs)
+			}else{
+                                fmt.Println(nPkgs[0],"not in workspace.")
+			}
                 }
 }
 
@@ -410,7 +481,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
 
         if len(tail)==1 {
                 if tail[0] == "init"     { initWorkspace(*wkPtr,*lePtr,*dsPtr)
-          }else if tail[0] == "list"     { listPackages(*wkPtr)
+          }else if tail[0] == "list"     { WSV,_,_ := getWorkspaceSettings(*wkPtr); listPackages(wkPtr,WSV,tail)
           }else if tail[0] == "repolist" { repoList(*wkPtr)
           }else if tail[0] == "metalist" { metaList(*wkPtr)
           }else{
@@ -425,10 +496,10 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "delrepo"   { delRepo(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "delmeta"   { delMeta(*wkPtr,WSV,REPOS,METAS,tail)
           }else if tail[0] == "checkrepo" { checkRepo(REPOS,METAS,tail)
-          }else if tail[0] == "enroll"    { enrollPackage(wkPtr,tail)
-          }else if tail[0] == "withdraw"  { withdrawPackage(wkPtr,tail)
+          }else if tail[0] == "enroll"    { enrollPackage(wkPtr,WSV,tail)
+          }else if tail[0] == "withdraw"  { withdrawPackage(wkPtr,WSV,tail)
 	  }else{
-	    sPkgs := buildSourceList(*wkPtr,strings.Split(tail[1],","))
+	    sPkgs := buildSourceList(*wkPtr,WSV,strings.Split(tail[1],","))
 	    for _, p := range sPkgs {
                     if tail[0]=="status"  { packageStatus(p)
               }else if tail[0]=="latest"  { latestPackage(p)
