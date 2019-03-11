@@ -52,6 +52,58 @@ func nnl(b []byte) []byte {
 	return b
 }
 
+func getPackageSettings(pn,pl string) (string,string,string,map[string]string,map[string]string){
+        IMP := make(map[string]string)
+        PRO := make(map[string]string)
+	n:=""
+	v:="v0.0.0"
+	f:="-"
+	var a []string
+        if _, err := os.Stat(path.Clean(pl)+"/"+pn+".Pkg"); err == nil {
+                b, err := ioutil.ReadFile(path.Clean(pl)+"/"+pn+".Pkg")
+                if err != nil {
+                        fmt.Print("Couldn't read Package", pn)
+                        os.Exit(1)
+                }
+                a=strings.Split(string(nnl(b)),"\n")
+	}
+	c:=0
+	l:=strings.Split(a[c]," ")
+        if len(l)>2 { 
+		n=l[1] 
+		v=l[2]
+	}
+	c=c+1
+	rline:=false
+	pline:=false
+	for ;c<len(a);c++ {
+		l:=strings.Split(strings.TrimSpace(a[c])," ")	
+                if l[0]=="from" { 
+                        f = l[1]  
+		}else if l[0]=="requires" { 
+			rline = true 
+                }else if l[0]=="provides" { 
+			pline = true 
+		}else{
+			if rline {
+				if len(l)>1{
+					IMP[l[0]]=l[1]
+				}
+			}
+			if pline {
+				if len(l)>1{
+					PRO[l[0]]=l[1]
+				}else if len(l[0])>1{
+                                        PRO[l[0]]="-"
+				}
+			}
+			
+		}
+	}
+	
+	return n,v,f,IMP,PRO
+}
+
 func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[string]string){
 	WSV := make(map[string]string)
         REPOS := make(map[string]string)
@@ -222,11 +274,16 @@ func repoPathOK( s string) bool {
 
 func listPackages(  wkPtr *string, WSV map[string]string, tail []string){
         sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
-	for i,_ := range sPkgs{
-		fmt.Println(i)
+	for i,j := range sPkgs{
+		_,v,f,IMP,PRO:=getPackageSettings(i,j)
+		fmt.Println(i,v,"from",f)
+		for i,j:=range(IMP){
+			fmt.Println("  imports:",i,j)
+		}
+                for i,j:=range(PRO){
+                        fmt.Println("  provides:",i,j)
+                }
 	}
-     //           _,_,REPOS := getWorkspaceSettings(wk)
-     //           for r,v:=range REPOS { fmt.Println(r,v)}
 }
 
 func repoList( wk string){
@@ -237,6 +294,14 @@ func repoList( wk string){
 func metaList( wk string){
                 _,METAS,_ := getWorkspaceSettings(wk)
                 for m,v:=range METAS { fmt.Println(m,v)}
+}
+
+func repubList(  wkPtr *string, WSV map[string]string, tail []string){
+        sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
+        for i,j := range sPkgs{
+                _,v,_,_,_:=getPackageSettings(i,j)
+                fmt.Println(i,v)
+        }
 }
 
 func addRepo( wk string, WSV, REPOS, METAS map[string]string, tail []string){
@@ -484,6 +549,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "list"     { WSV,_,_ := getWorkspaceSettings(*wkPtr); listPackages(wkPtr,WSV,tail)
           }else if tail[0] == "repolist" { repoList(*wkPtr)
           }else if tail[0] == "metalist" { metaList(*wkPtr)
+          }else if tail[0] == "repub"    { WSV,_,_ := getWorkspaceSettings(*wkPtr); repubList(wkPtr,WSV,tail)
           }else{
                 fmt.Println("Incomplete command. exiting.")
 	  }
@@ -533,6 +599,7 @@ func main() {
   Commands:
 
     init                         Initialize a workspace
+    repub                        Regenerate the publish list of packages
     list                         List the packages in the workspace
     repolist                     List repos configured for workspace
     metalist                     List metarepos configured for workspace
