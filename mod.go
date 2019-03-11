@@ -52,12 +52,13 @@ func nnl(b []byte) []byte {
 	return b
 }
 
-func getPackageSettings(pn,pl string) (string,string,string,map[string]string,map[string]string){
+func getPackageSettings(pn,pl string) (string,string,string,string,map[string]string,map[string]string){
         IMP := make(map[string]string)
         PRO := make(map[string]string)
 	n:=""
 	v:="v0.0.0"
 	f:="-"
+	li:="unknown"
 	var a []string
         if _, err := os.Stat(path.Clean(pl)+"/"+pn+".Pkg"); err == nil {
                 b, err := ioutil.ReadFile(path.Clean(pl)+"/"+pn+".Pkg")
@@ -80,6 +81,8 @@ func getPackageSettings(pn,pl string) (string,string,string,map[string]string,ma
 		l:=strings.Split(strings.TrimSpace(a[c])," ")	
                 if l[0]=="from" { 
                         f = l[1]  
+                }else if l[0]=="license" { 
+                        li = l[1]  
 		}else if l[0]=="requires" { 
 			rline = true 
                 }else if l[0]=="provides" { 
@@ -101,7 +104,7 @@ func getPackageSettings(pn,pl string) (string,string,string,map[string]string,ma
 		}
 	}
 	
-	return n,v,f,IMP,PRO
+	return n,v,f,li,IMP,PRO
 }
 
 func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[string]string){
@@ -275,8 +278,8 @@ func repoPathOK( s string) bool {
 func listPackages(  wkPtr *string, WSV map[string]string, tail []string){
         sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
 	for i,j := range sPkgs{
-		_,v,f,IMP,PRO:=getPackageSettings(i,j)
-		fmt.Println(i,v,"from",f)
+		_,v,f,l,IMP,PRO:=getPackageSettings(i,j)
+		fmt.Println(i,v,"from",f,"license",l)
 		for i,j:=range(IMP){
 			fmt.Println("  imports:",i,j)
 		}
@@ -296,12 +299,55 @@ func metaList( wk string){
                 for m,v:=range METAS { fmt.Println(m,v)}
 }
 
-func repubList(  wkPtr *string, WSV map[string]string, tail []string){
-        sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
-        for i,j := range sPkgs{
-                _,v,_,_,_:=getPackageSettings(i,j)
-                fmt.Println(i,v)
-        }
+
+func repubList( init bool, wkPtr *string, WSV map[string]string, tail []string){
+    var f *os.File = nil
+    var err error
+    rmTmp := false
+
+    t := time.Now()
+    subDir:=""
+    le,_:=WSV["workspace-module-line-ending"]
+    e:=leStr(le)
+    if WSV["workspace-packages-dirstyle"] == "flat" { subDir = "/Index" }
+    if WSV["workspace-packages-dirstyle"] == "path" { subDir = "/Index" }
+    n:=path.Clean(tail[2])+subDir+"/Packages.csv"
+    if len(tail)>2 {
+        if _, err = os.Stat(n); err == nil {
+	    if ! init {
+		rmTmp = true
+                err = os.Rename(n,n+"."+t.Format("20060102150405")); check(err)
+                f, err = os.Create(n); check(err)
+	    }else{ fmt.Println(" list already exists. Try 'repub'")}
+ 	}else{
+	    if init {
+		f, err = os.Create(n); check(err)
+	    }else{ fmt.Println(" list not found. Try 'prepub'")}
+	}
+
+	if f != nil {
+
+        	loc:=tail[1]
+        	sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
+        	_, err = f.WriteString("package,license,version,location"+e); check(err)
+        	for i,j := range sPkgs{
+        	        _,v,_,l,_,_:=getPackageSettings(i,j)
+			if WSV["workspace-packages-dirstyle"] == "combined" {
+        	        	_, err = f.WriteString(i+","+l+","+v+","+loc+e); check(err)
+				}else if WSV["workspace-packages-dirstyle"] == "flat" {
+        	                _, err = f.WriteString(i+","+l+","+v+","+loc+"/"+i+e); check(err)
+			}else{
+				// TODO: decide on path format
+			}
+        	}
+
+	}
+	if rmTmp {
+		err = os.Remove(n+"."+t.Format("20060102150405")); check(err)
+	}
+    }else{
+	fmt.Println("need \"mod repub <options> publicLocation localDirectory\"")
+    }
 }
 
 func addRepo( wk string, WSV, REPOS, METAS map[string]string, tail []string){
@@ -549,7 +595,6 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "list"     { WSV,_,_ := getWorkspaceSettings(*wkPtr); listPackages(wkPtr,WSV,tail)
           }else if tail[0] == "repolist" { repoList(*wkPtr)
           }else if tail[0] == "metalist" { metaList(*wkPtr)
-          }else if tail[0] == "repub"    { WSV,_,_ := getWorkspaceSettings(*wkPtr); repubList(wkPtr,WSV,tail)
           }else{
                 fmt.Println("Incomplete command. exiting.")
 	  }
@@ -564,6 +609,8 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "checkrepo" { checkRepo(REPOS,METAS,tail)
           }else if tail[0] == "enroll"    { enrollPackage(wkPtr,WSV,tail)
           }else if tail[0] == "withdraw"  { withdrawPackage(wkPtr,WSV,tail)
+          }else if tail[0] == "prepub"    { repubList(true,wkPtr,WSV,tail)
+          }else if tail[0] == "repub"     { repubList(false,wkPtr,WSV,tail)
 	  }else{
 	    sPkgs := buildSourceList(*wkPtr,WSV,strings.Split(tail[1],","))
 	    for _, p := range sPkgs {
@@ -600,6 +647,7 @@ func main() {
 
     init                         Initialize a workspace
     repub                        Regenerate the publish list of packages
+    prepub                       Generate the publish list of packages
     list                         List the packages in the workspace
     repolist                     List repos configured for workspace
     metalist                     List metarepos configured for workspace
