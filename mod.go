@@ -31,6 +31,7 @@ import (
 	"strings"
 	"bytes"
 	"time"
+	"crypto/sha256"
 )
 
 func check(e error) {
@@ -537,49 +538,76 @@ func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
                 }
 }
 
-func packageStatus(p string){
+func packageStatus(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
-func latestPackage(p string){
+func latestPackage(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
-func rehashPackage(p string){
+func rehashPackage(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
-                        fmt.Println("Rehashing", p,":")
-                        fmt.Println(string(contents))
+	pe:=p
+        ds,_:=WSV["workspace-packages-dirstyle"]
+	if ds=="flat" {
+		pe=pe+"/"+i
+	}
+
+        contents, _ = ioutil.ReadFile(pe+".Pkg")//; check(err)
+        fmt.Println("Rehashing", i, pe+".Pkg",":")
+
+        // fmt.Println(string(contents))
+
+	sha_256 := sha256.New()
+	sha_256.Write(contents)
+
+	if 1==2 { fmt.Printf("sha256:\t\t%x\n", sha_256.Sum(nil)) }
+
+        _,_,_,_,_,PRO:=getPackageSettings(i,p)
+	for j,h := range(PRO){
+          
+	  item, e := ioutil.ReadFile(p+"/"+j)
+	  have:="-"
+          sha_item := sha256.New()
+	  if e == nil {
+                sha_item.Write(item)
+		have = fmt.Sprintf("%x",sha_item.Sum(nil))
+	  }
+          fmt.Println("   ",j,"   ",h,have)
+
+	}
+
 }
 
-func addtoPackage(p string){
+func addtoPackage(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Adding to", p,":")
                         fmt.Println(string(contents))
 }
 
-func packageUpdates(p string){
+func packageUpdates(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
-func exactPackage(p string){
+func exactPackage(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
-func packageProvider(p string){
+func packageProvider(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+".Pkg")
                         fmt.Println("Status of", p,":")
@@ -613,14 +641,14 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "repub"     { repubList(false,wkPtr,WSV,tail)
 	  }else{
 	    sPkgs := buildSourceList(*wkPtr,WSV,strings.Split(tail[1],","))
-	    for _, p := range sPkgs {
-                    if tail[0]=="status"  { packageStatus(p)
-              }else if tail[0]=="latest"  { latestPackage(p)
-              }else if tail[0]=="rehash"  { rehashPackage(p)
-              }else if tail[0]=="addto"   { addtoPackage(p)
-              }else if tail[0]=="updates" { packageUpdates(p)
-              }else if tail[0]=="exact"   { exactPackage(p)
-              }else if tail[0]=="provider"{ packageProvider(p)
+	    for i, p := range sPkgs {
+                    if tail[0]=="status"  { packageStatus(i,p,WSV)
+              }else if tail[0]=="latest"  { latestPackage(i,p,WSV)
+              }else if tail[0]=="rehash"  { rehashPackage(i,p,WSV)
+              }else if tail[0]=="addto"   { addtoPackage(i,p,WSV)
+              }else if tail[0]=="updates" { packageUpdates(i,p,WSV)
+              }else if tail[0]=="exact"   { exactPackage(i,p,WSV)
+              }else if tail[0]=="provider"{ packageProvider(i,p,WSV)
               }else{
                 fmt.Println(tail[0]," means what?")
               }
