@@ -95,9 +95,25 @@ func getPackageSettings(pn,pl string) (string,string,string,string,string,string
 	return name,version,from,retrieved,license,authors,IMP,PRO
 }
 
-func putPackageSettings(i,p,n,v,f,r,l,a string, IMP,PRO map[string]string){
+func putPackageSettings(pn,pl,name,version,from,retrieved,license,authors string, IMP,PRO map[string]string){
+        t := time.Now()
+        err := os.Rename(path.Clean(pl)+"/"+pn+".Pkg",path.Clean(pl)+"/"+pn+".Pkg."+t.Format("20060102150405"))
+        check(err)
+        f, err := os.Create(path.Clean(pl)+"/"+pn+".Pkg"); check(err)
+        defer f.Close()
+        _, err = f.WriteString("k,v1,v2\n"); check(err)
+        _, err = f.WriteString("package,"+name+","+version+"\n"); check(err)
+        _, err = f.WriteString("from,"+from+","+retrieved+"\n"); check(err)
+        _, err = f.WriteString("license,"+license+","+authors+"\n"); check(err)
+        for k,v := range IMP {
+                _, err := f.WriteString(r+","+k+","+v+"\n"); check(err)
+        }
+        for k,v := range PRO {
+                _, err := f.WriteString(p+","+k+","+v+"\n"); check(err)
+        }       
 
-
+        f.Sync()
+        err = os.Remove(path.Clean(pl)+"/"+pn+".Pkg."+t.Format("20060102150405")); check(err)
 }
 
 func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[string]string){
@@ -459,16 +475,6 @@ func checkRepo( REPOS, METAS map[string]string, tail []string){
                         fmt.Println("checking repo "+r)
                   }
 }
-
-//package [core]/Mod v0.1.0
-//
-//requires (
-//        [core]/System v5.0.0
-//)
-//
-//provides (
-//	PackageFrames.Mod  Mod.Mod  Packages.Mod  Resources.Mod
-//)
 
 
 func enrollPackage( wkPtr *string, WSV map[string]string, tail []string){
