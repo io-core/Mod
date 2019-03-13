@@ -53,13 +53,15 @@ func nnl(b []byte) []byte {
 	return b
 }
 
-func getPackageSettings(pn,pl string) (string,string,string,string,map[string]string,map[string]string){
+func getPackageSettings(pn,pl string) (string,string,string,string,string,string,map[string]string,map[string]string){
         IMP := make(map[string]string)
         PRO := make(map[string]string)
-	n:=""
-	v:="v0.0.0"
-	f:="-"
-	li:="unknown"
+	name:=""
+	version:="v0.0.0"
+	from:="unrecorded"
+	retrieved:=""
+	license:="unknown"
+	authors:="anonymous"
 	var a []string
         if _, err := os.Stat(path.Clean(pl)+"/"+pn+".Pkg"); err == nil {
                 b, err := ioutil.ReadFile(path.Clean(pl)+"/"+pn+".Pkg")
@@ -70,42 +72,32 @@ func getPackageSettings(pn,pl string) (string,string,string,string,map[string]st
                 a=strings.Split(string(nnl(b)),"\n")
 	}
 	c:=0
-	l:=strings.Split(a[c]," ")
-        if len(l)>2 { 
-		n=l[1] 
-		v=l[2]
-	}
-	c=c+1
-	rline:=false
-	pline:=false
 	for ;c<len(a);c++ {
-		l:=strings.Split(strings.TrimSpace(a[c])," ")	
-                if l[0]=="from" { 
-                        f = l[1]  
+	    l:=strings.Split(strings.TrimSpace(a[c]),",")	
+	    if len(l)>2 {
+                if l[0]=="package" {
+                        name = l[1]
+			version = l[2]
+                }else if l[0]=="from" { 
+                        from = l[1]  
+			retrieved = l[2]
                 }else if l[0]=="license" { 
-                        li = l[1]  
-		}else if l[0]=="requires" { 
-			rline = true 
-                }else if l[0]=="provides" { 
-			pline = true 
-		}else{
-			if rline {
-				if len(l)>1{
-					IMP[l[0]]=l[1]
-				}
-			}
-			if pline {
-				if len(l)>1{
-					PRO[l[0]]=l[1]
-				}else if len(l[0])>1{
-                                        PRO[l[0]]="-"
-				}
-			}
-			
+                        license = l[1]  
+			authors = l[2]
+		}else if l[0]=="r" { 
+			IMP[l[1]]=l[2]
+                }else if l[0]=="p" { 
+			PRO[l[1]]=l[2] 
 		}
+	    }
 	}
-	
-	return n,v,f,li,IMP,PRO
+	if 1==2 {fmt.Println(authors,retrieved)}
+	return name,version,from,retrieved,license,authors,IMP,PRO
+}
+
+func putPackageSettings(i,p,n,v,f,r,l,a string, IMP,PRO map[string]string){
+
+
 }
 
 func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[string]string){
@@ -279,7 +271,7 @@ func repoPathOK( s string) bool {
 func listPackages(  wkPtr *string, WSV map[string]string, tail []string){
         sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
 	for i,j := range sPkgs{
-		_,v,f,l,IMP,PRO:=getPackageSettings(i,j)
+		_,v,f,_,l,_,IMP,PRO:=getPackageSettings(i,j)
 		fmt.Println(i,v,"from",f,"license",l)
 		for i,j:=range(IMP){
 			fmt.Println("  imports:",i,j)
@@ -332,7 +324,7 @@ func repubList( init bool, wkPtr *string, WSV map[string]string, tail []string){
         	sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
         	_, err = f.WriteString("package,license,version,location"+e); check(err)
         	for i,j := range sPkgs{
-        	        _,v,_,l,_,_:=getPackageSettings(i,j)
+        	        _,v,_,_,l,_,_,_:=getPackageSettings(i,j)
 			if WSV["workspace-packages-dirstyle"] == "combined" {
         	        	_, err = f.WriteString(i+","+l+","+v+","+loc+e); check(err)
 				}else if WSV["workspace-packages-dirstyle"] == "flat" {
@@ -570,7 +562,7 @@ func rehashPackage(i,p string, WSV map[string]string){
 
 	if 1==2 { fmt.Printf("sha256:\t\t%x\n", sha_256.Sum(nil)) }
 
-        _,_,_,_,_,PRO:=getPackageSettings(i,p)
+        n,v,f,r,l,a,IMP,PRO:=getPackageSettings(i,p)
 	for j,h := range(PRO){
           
 	  item, e := ioutil.ReadFile(p+"/"+j)
@@ -579,10 +571,19 @@ func rehashPackage(i,p string, WSV map[string]string){
 	  if e == nil {
                 sha_item.Write(item)
 		have = fmt.Sprintf("%x",sha_item.Sum(nil))
+		if have != h {
+		   fmt.Println("   ",j,"to",have)
+		}else{
+		   fmt.Println("   ",j,"unchanged.")
+		}
+	  }else{
+		fmt.Println("  ",j,"not found! please fix.")
+		os.Exit(1)
 	  }
-          fmt.Println("   ",j,"   ",h,have)
+          
 
 	}
+	putPackageSettings(i,p,n,v,f,r,l,a,IMP,PRO)
 
 }
 
