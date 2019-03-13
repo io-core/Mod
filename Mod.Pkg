@@ -1,10 +1,9 @@
-package [core]/Package v0.1.0
-
-requires (
-        [core]/System v5.0.0
-)
-
-provides (
-	PackageFrames.Mod  Package.Mod  Packages.Mod  Resources.Mod
-)
-
+k,v1,v2
+package,Mod,v0.1.0
+from,[core-io]20190101121212
+license,MIT,Charles Perkins
+r,[core]/System,v5.0.0
+p,PackageFrames.Mod,-
+p,Mod.Mod,-
+p,Packages.Mod,-
+p,Resources.Mod,-
