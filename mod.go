@@ -106,10 +106,10 @@ func putPackageSettings(pn,pl,name,version,from,retrieved,license,authors string
         _, err = f.WriteString("from,"+from+","+retrieved+"\n"); check(err)
         _, err = f.WriteString("license,"+license+","+authors+"\n"); check(err)
         for k,v := range IMP {
-                _, err := f.WriteString(r+","+k+","+v+"\n"); check(err)
+                _, err := f.WriteString("r,"+k+","+v+"\n"); check(err)
         }
         for k,v := range PRO {
-                _, err := f.WriteString(p+","+k+","+v+"\n"); check(err)
+                _, err := f.WriteString("p,"+k+","+v+"\n"); check(err)
         }       
 
         f.Sync()
@@ -579,6 +579,7 @@ func rehashPackage(i,p string, WSV map[string]string){
 		have = fmt.Sprintf("%x",sha_item.Sum(nil))
 		if have != h {
 		   fmt.Println("   ",j,"to",have)
+		   PRO[j]=have
 		}else{
 		   fmt.Println("   ",j,"unchanged.")
 		}
