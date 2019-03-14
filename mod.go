@@ -486,7 +486,7 @@ func enrollPackage( wkPtr *string, WSV map[string]string, tail []string){
                         fmt.Println("Only enroll one package at a time")
                 }else{
                         if _, ok := sPkgs[nPkgs[0]]; ! ok {       
-                                fmt.Println("Enrolling",nPkgs[0],sPkgs)
+                                //fmt.Println("Enrolling",nPkgs[0],sPkgs)
 				le,_:=WSV["workspace-module-line-ending"]
 				e:=leStr(le)
                                 ds,_:=WSV["workspace-packages-dirstyle"]
@@ -551,6 +551,13 @@ func relicensePackage(i,p string, WSV map[string]string){
 }
 
 func reauthorPackage(i,p string, WSV map[string]string){
+        var contents []byte
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
+                        fmt.Println("Reauthoring", p+"/"+i,":")
+                        fmt.Println(string(contents))
+}
+
+func incrementPackage(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Reauthoring", p+"/"+i,":")
@@ -672,6 +679,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
                     if tail[0]=="status"    { packageStatus(i,p,WSV)
               }else if tail[0]=="relicense" { relicensePackage(i,p,WSV)
               }else if tail[0]=="reauthor"  { reauthorPackage(i,p,WSV)
+              }else if tail[0]=="increment" { incrementPackage(i,p,WSV)
               }else if tail[0]=="latest"    { latestPackage(i,p,WSV)
               }else if tail[0]=="rehash"    { rehashPackage(i,p,WSV)
               }else if tail[0]=="addto"     { addtoPackage(i,p,WSV)
@@ -718,6 +726,9 @@ func main() {
     enroll     <package file(s)> Enroll (register) a package in the workspace with file(s)
     withdraw   <package file(s)> Withdraw (de-register) a package in the workspace with file(s)
     status     <package|all>     Check the status of a package or packages in the workspace and the repos
+    relicense  <package|all>     Change the license of a package or packages in the workspace
+    reauthor   <package|all>     Change the authors of a package or packages in the workspace
+    increment  package           Increment the version number of a package in the workspace
     latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
     rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
     addto      <package file(s)> Add local file(s) to the package in the workspace
