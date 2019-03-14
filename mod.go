@@ -70,6 +70,8 @@ func getPackageSettings(pn,pl string) (string,string,string,string,string,string
                         os.Exit(1)
                 }
                 a=strings.Split(string(nnl(b)),"\n")
+	}else{
+		fmt.Println("Couldn't stat ",path.Clean(pl)+"/"+pn+".Pkg")
 	}
 	c:=0
 	for ;c<len(a);c++ {
@@ -615,6 +617,12 @@ func latestPackage(i,p string, WSV map[string]string){
                         fmt.Println(string(contents))
 }
 
+func versionPackage(i,p string, WSV map[string]string){
+        //pe:=dsExtend(i,p,WSV)
+	_,v,_,_,_,_,_,_:=getPackageSettings(i,p)
+	fmt.Println("  ",i,v)
+}
+
 func dsExtend(i,p string, WSV map[string]string) string {
         pe:=p
         ds,_:=WSV["workspace-packages-dirstyle"]
@@ -725,6 +733,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
 	    for i, p := range sPkgs {
                     if tail[0]=="status"    { packageStatus(i,p,WSV)
               }else if tail[0]=="latest"    { latestPackage(i,p,WSV)
+              }else if tail[0]=="version"   { versionPackage(i,p,WSV)
               }else if tail[0]=="rehash"    { rehashPackage(i,p,WSV)
               }else if tail[0]=="addto"     { addtoPackage(i,p,WSV)
               }else if tail[0]=="updates"   { packageUpdates(i,p,WSV)
@@ -754,31 +763,32 @@ func main() {
             fmt.Fprintf(os.Stderr, `
   Commands:
 
-    init                         Initialize a workspace
-    repub                        Regenerate the publish list of packages
-    prepub                       Generate the publish list of packages
-    list                         List the packages in the workspace
-    repolist                     List repos configured for workspace
-    metalist                     List metarepos configured for workspace
-    addrepo    <repo:path>       Add a repo (and path to that repo) to the workspace
-    addmeta    <metarepo:repo>   Add a metarepo (and specific repo for the metarepo) to the workspace
-    changerepo <repo:path>       Change the path for an existing repo for the workspace
-    changemeta <metarepo:repo>   Change the specific repo for an existing metarepo for the workspace
-    delrepo    <repo>            Remove a repo from the workspace
-    delmeta    <metarepo>        Remove a metarepo from the workspace
-    checkrepo  <repo>            Check the status of a repo for the workspace
-    enroll     <package file(s)> Enroll (register) a package in the workspace with file(s)
-    withdraw   <package file(s)> Withdraw (de-register) a package in the workspace with file(s)
-    status     <package|all>     Check the status of a package or packages in the workspace and the repos
-    relicense  package license   Change the license of a package in the workspace
-    reauthor   package authors   Change the authors of a package in the workspace
-    increment  package version   Increment the version number of a package in the workspace
-    latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
-    rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
-    addto      <package file(s)> Add local file(s) to the package in the workspace
-    updates    <package|all>     Report updates (from repos) to a package or packages in the workspace
-    exact      <package|all>     Retrieve a specific version of a package from the repos to the workspace
-    provider   <package|all>     Report which repo provided (if any) the package or packages in the workspace
+    init                             Initialize a workspace
+    repub                            Regenerate the publish list of packages
+    prepub                           Generate the publish list of packages
+    list                             List the packages in the workspace
+    repolist                         List repos configured for workspace
+    metalist                         List metarepos configured for workspace
+    addrepo    <repo:path>           Add a repo (and path to that repo) to the workspace
+    addmeta    <metarepo:repo>       Add a metarepo (and specific repo for the metarepo) to the workspace
+    changerepo <repo:path>           Change the path for an existing repo for the workspace
+    changemeta <metarepo:repo>       Change the specific repo for an existing metarepo for the workspace
+    delrepo    <repo>                Remove a repo from the workspace
+    delmeta    <metarepo>            Remove a metarepo from the workspace
+    checkrepo  <repo>                Check the status of a repo for the workspace
+    enroll     <package> <file(s)>   Enroll (register) a package in the workspace with file(s)
+    withdraw   <package> <file(s)>   Withdraw (de-register) a package in the workspace with file(s)
+    status     <package|all>         Check the status of a package or packages in the workspace and the repos
+    relicense  <package> <license>   Change the license of a package in the workspace
+    reauthor   <package> <authors>   Change the authors of a package in the workspace
+    increment  <package> <version>   Increment the version number of a package in the workspace
+    latest     <package|all>         Retrieve the latest version of a package from the repos to the workspace
+    version    <package|all>         Show the version(s) of a package or packages in the workspace
+    rehash     <package|all>         Update the hashes of local files in the workspace for the package or packages
+    addto      <package> <file(s)>   Add local file(s) to the package in the workspace
+    updates    <package|all>         Report updates (from repos) to a package or packages in the workspace
+    exact      <package|all>         Retrieve a specific version of a package from the repos to the workspace
+    provider   <package|all>         Report which repo provided (if any) the package or packages in the workspace
 `)
 
 
