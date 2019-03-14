@@ -580,16 +580,25 @@ func reauthorPackage(wkPtr *string, WSV map[string]string, tail []string){
 }
 
 func incrementPackage(wkPtr *string, WSV map[string]string, tail []string){
-                nPkgs := strings.Split(tail[1],",")
-
+        nPkgs := strings.Split(tail[1],",")
+        if len(tail)<3 {
+                fmt.Println("usage: mod increment VERSION (e.g. v1.0.3-rc6)")
+        }else{
                 if len(nPkgs)!=1 || tail[1]=="all"{
-                        fmt.Println("Only relicense one package at a time")
+                        fmt.Println("Only increment one package at a time")
                 }else{
                         pe:=dsExtend(tail[1],*wkPtr,WSV)
-                        contents, err := ioutil.ReadFile(pe+"/"+tail[1]+".Pkg"); check(err)
-                        fmt.Println("Reauthoring", tail[1]+":")
-                        fmt.Println(string(contents))
-		}
+                        if _, err := os.Stat(pe+"/"+tail[1]+".Pkg"); err == nil {
+                                n,v,f,r,l,a,IMP,PRO:=getPackageSettings(tail[1],pe)
+                                fmt.Println("Incrementing", tail[1],"from",v,"to",tail[2])
+                                v=tail[2]
+                                putPackageSettings(tail[1],pe,n,v,f,r,l,a,IMP,PRO)
+
+                        }else{
+                                fmt.Println("Package",tail[1],"not found.")
+                        }
+                }
+        }
 }
 
 func packageStatus(i,p string, WSV map[string]string){
