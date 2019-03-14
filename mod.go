@@ -288,7 +288,7 @@ func listPackages(  wkPtr *string, WSV map[string]string, tail []string){
         sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
 	for i,j := range sPkgs{
 		_,v,f,_,l,_,IMP,PRO:=getPackageSettings(i,j)
-		fmt.Println(i,v,"from",f,"license",l)
+		fmt.Println(i,v,"license",l,"from",f)
 		for i,j:=range(IMP){
 			fmt.Println("  imports:",i,j)
 		}
