@@ -776,8 +776,8 @@ func main() {
     delrepo    <repo>                Remove a repo from the workspace
     delmeta    <metarepo>            Remove a metarepo from the workspace
  x  checkrepo  <repo>                Check the status of a repo for the workspace
- x  enroll     <package> <file(s)>   Enroll (register) a package in the workspace with file(s)
- x  withdraw   <package> <file(s)>   Withdraw (de-register) a package in the workspace with file(s)
+ x  enroll     <package> <file(s)>   Enroll (register) one or more files into a package in the workspace
+ x  withdraw   <package> <file(s)>   Withdraw (de-register) one or more files from a package in the workspace
  x  status     <package|all>         Check the status of a package or packages in the workspace and the repos
     relicense  <package> <license>   Change the license of a package in the workspace
     reauthor   <package> <authors>   Change the authors of a package in the workspace
