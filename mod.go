@@ -538,7 +538,7 @@ func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
 func relicensePackage(wkPtr *string, WSV map[string]string, tail []string){
         nPkgs := strings.Split(tail[1],",")
 	if len(tail)<3 {
-		fmt.Println("usage: \"mod relicense LICENSE\"")
+		fmt.Println("usage: mod relicense LICENSE")
 	}else{
                 if len(nPkgs)!=1 || tail[1]=="all"{
                         fmt.Println("Only relicense one package at a time")
@@ -558,16 +558,25 @@ func relicensePackage(wkPtr *string, WSV map[string]string, tail []string){
 }
 
 func reauthorPackage(wkPtr *string, WSV map[string]string, tail []string){
-                nPkgs := strings.Split(tail[1],",")
-
+        nPkgs := strings.Split(tail[1],",")
+        if len(tail)<3 {
+                fmt.Println("usage: mod reauthor \"AUTHORS\"")
+        }else{
                 if len(nPkgs)!=1 || tail[1]=="all"{
-                        fmt.Println("Only relicense one package at a time")
+                        fmt.Println("Only reauthor one package at a time")
                 }else{
                         pe:=dsExtend(tail[1],*wkPtr,WSV)
-                        contents, err := ioutil.ReadFile(pe+"/"+tail[1]+".Pkg"); check(err)
-                        fmt.Println("Reauthoring", tail[1],":")
-                        fmt.Println(string(contents))
-		}
+                        if _, err := os.Stat(pe+"/"+tail[1]+".Pkg"); err == nil {
+                                n,v,f,r,l,a,IMP,PRO:=getPackageSettings(tail[1],pe)
+                                fmt.Println("Relicensing", tail[1],"from",a,"to",tail[2])
+                                a=tail[2]
+                                putPackageSettings(tail[1],pe,n,v,f,r,l,a,IMP,PRO)
+
+                        }else{
+                                fmt.Println("Package",tail[1],"not found.")
+                        }
+                }
+	}
 }
 
 func incrementPackage(wkPtr *string, WSV map[string]string, tail []string){
