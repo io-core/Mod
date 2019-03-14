@@ -775,20 +775,20 @@ func main() {
     changemeta <metarepo:repo>       Change the specific repo for an existing metarepo for the workspace
     delrepo    <repo>                Remove a repo from the workspace
     delmeta    <metarepo>            Remove a metarepo from the workspace
-    checkrepo  <repo>                Check the status of a repo for the workspace
-    enroll     <package> <file(s)>   Enroll (register) a package in the workspace with file(s)
-    withdraw   <package> <file(s)>   Withdraw (de-register) a package in the workspace with file(s)
-    status     <package|all>         Check the status of a package or packages in the workspace and the repos
+ x  checkrepo  <repo>                Check the status of a repo for the workspace
+ x  enroll     <package> <file(s)>   Enroll (register) a package in the workspace with file(s)
+ x  withdraw   <package> <file(s)>   Withdraw (de-register) a package in the workspace with file(s)
+ x  status     <package|all>         Check the status of a package or packages in the workspace and the repos
     relicense  <package> <license>   Change the license of a package in the workspace
     reauthor   <package> <authors>   Change the authors of a package in the workspace
     increment  <package> <version>   Increment the version number of a package in the workspace
-    latest     <package|all>         Retrieve the latest version of a package from the repos to the workspace
+ x  latest     <package|all>         Retrieve the latest version of a package from the repos to the workspace
     version    <package|all>         Show the version(s) of a package or packages in the workspace
     rehash     <package|all>         Update the hashes of local files in the workspace for the package or packages
-    addto      <package> <file(s)>   Add local file(s) to the package in the workspace
-    updates    <package|all>         Report updates (from repos) to a package or packages in the workspace
-    exact      <package|all>         Retrieve a specific version of a package from the repos to the workspace
-    provider   <package|all>         Report which repo provided (if any) the package or packages in the workspace
+ x  addto      <package> <file(s)>   Add local file(s) to the package in the workspace
+ x  updates    <package|all>         Report updates (from repos) to a package or packages in the workspace
+ x  exact      <package|all>         Retrieve a specific version of a package from the repos to the workspace
+ x  provider   <package|all>         Report which repo provided (if any) the package or packages in the workspace
 `)
 
 
