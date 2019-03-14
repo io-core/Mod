@@ -524,17 +524,22 @@ func enrollPackage( wkPtr *string, WSV map[string]string, tail []string){
 }
 
 func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
-                sPkgs := buildSourceList(*wkPtr,WSV,[]string{"all"})
-                nPkgs := strings.Split(tail[1],",")
-                if len(nPkgs)!=1{
-                        fmt.Println("Only withdraw one package at a time")
+        nPkgs := strings.Split(tail[1],",")
+        if len(tail)<2 {
+                fmt.Println("usage: mod remove PACKAGE")
+        }else{
+                if len(nPkgs)!=1 || tail[1]=="all"{
+                        fmt.Println("Only remove one package at a time")
                 }else{
-			if _, ok := sPkgs[nPkgs[0]]; ok {                        	
-                        	fmt.Println("Withdrawing",nPkgs[0],sPkgs)
-			}else{
-                                fmt.Println(nPkgs[0],"not in workspace.")
-			}
+                        pe:=dsExtend(tail[1],*wkPtr,WSV)
+                        if _, err := os.Stat(pe+"/"+tail[1]+".Pkg"); err == nil {
+				err := os.Remove(pe+"/"+tail[1]+".Pkg"); check(err)
+                                fmt.Println("Package",tail[1],"removed.")
+                        }else{
+                                fmt.Println("Package",tail[1],"not found.")
+                        }
                 }
+        }                
 }
 
 func relicensePackage(wkPtr *string, WSV map[string]string, tail []string){
@@ -618,7 +623,6 @@ func latestPackage(i,p string, WSV map[string]string){
 }
 
 func versionPackage(i,p string, WSV map[string]string){
-        //pe:=dsExtend(i,p,WSV)
 	_,v,_,_,_,_,_,_:=getPackageSettings(i,p)
 	fmt.Println("  ",i,v)
 }
@@ -694,10 +698,8 @@ func exactPackage(i,p string, WSV map[string]string){
 }
 
 func packageProvider(i,p string, WSV map[string]string){
-        var contents []byte
-                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
-                        fmt.Println("Status of", p,":")
-                        fmt.Println(string(contents))
+        _,_,f,_,_,_,_,_:=getPackageSettings(i,p)
+        fmt.Println("  ",i,"is from",f)
 }
 
 
@@ -776,8 +778,8 @@ func main() {
     delrepo    <repo>                Remove a repo from the workspace
     delmeta    <metarepo>            Remove a metarepo from the workspace
  x  checkrepo  <repo>                Check the status of a repo for the workspace
- x  enroll     <package> <file(s)>   Enroll (register) one or more files into a package in the workspace
- x  withdraw   <package> <file(s)>   Withdraw (de-register) one or more files from a package in the workspace
+    enroll     <package>             Enroll (register) a local package into the workspace
+    withdraw   <package> <file(s)>   Withdraw (de-register) a local package from the workspace
  x  status     <package|all>         Check the status of a package or packages in the workspace and the repos
     relicense  <package> <license>   Change the license of a package in the workspace
     reauthor   <package> <authors>   Change the authors of a package in the workspace
@@ -788,7 +790,7 @@ func main() {
  x  addto      <package> <file(s)>   Add local file(s) to the package in the workspace
  x  updates    <package|all>         Report updates (from repos) to a package or packages in the workspace
  x  exact      <package|all>         Retrieve a specific version of a package from the repos to the workspace
- x  provider   <package|all>         Report which repo provided (if any) the package or packages in the workspace
+    provider   <package|all>         Report which repo provided (if any) the package or packages in the workspace
 `)
 
 
