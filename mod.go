@@ -535,32 +535,58 @@ func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
                 }
 }
 
+func relicensePackage(wkPtr *string, WSV map[string]string, tail []string){
+        nPkgs := strings.Split(tail[1],",")
+	if len(tail)<3 {
+		fmt.Println("usage: \"mod relicense LICENSE\"")
+	}else{
+                if len(nPkgs)!=1 || tail[1]=="all"{
+                        fmt.Println("Only relicense one package at a time")
+                }else{
+		        pe:=dsExtend(tail[1],*wkPtr,WSV)
+			if _, err := os.Stat(pe+"/"+tail[1]+".Pkg"); err == nil {
+				n,v,f,r,l,a,IMP,PRO:=getPackageSettings(tail[1],pe)
+                        	fmt.Println("Relicensing", tail[1],"from",l,"to",tail[2])
+                        	l=tail[2]
+			        putPackageSettings(tail[1],pe,n,v,f,r,l,a,IMP,PRO)
+
+			}else{
+				fmt.Println("Package",tail[1],"not found.")
+			}
+                }
+	}
+}
+
+func reauthorPackage(wkPtr *string, WSV map[string]string, tail []string){
+                nPkgs := strings.Split(tail[1],",")
+
+                if len(nPkgs)!=1 || tail[1]=="all"{
+                        fmt.Println("Only relicense one package at a time")
+                }else{
+                        pe:=dsExtend(tail[1],*wkPtr,WSV)
+                        contents, err := ioutil.ReadFile(pe+"/"+tail[1]+".Pkg"); check(err)
+                        fmt.Println("Reauthoring", tail[1],":")
+                        fmt.Println(string(contents))
+		}
+}
+
+func incrementPackage(wkPtr *string, WSV map[string]string, tail []string){
+                nPkgs := strings.Split(tail[1],",")
+
+                if len(nPkgs)!=1 || tail[1]=="all"{
+                        fmt.Println("Only relicense one package at a time")
+                }else{
+                        pe:=dsExtend(tail[1],*wkPtr,WSV)
+                        contents, err := ioutil.ReadFile(pe+"/"+tail[1]+".Pkg"); check(err)
+                        fmt.Println("Reauthoring", tail[1]+":")
+                        fmt.Println(string(contents))
+		}
+}
+
 func packageStatus(i,p string, WSV map[string]string){
         var contents []byte
                         contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Status of", p,":")
-                        fmt.Println(string(contents))
-}
-
-func relicensePackage(i,p string, WSV map[string]string){
-        var contents []byte
-        
-                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
-                        fmt.Println("Relicensing", i,":")
-                        fmt.Println(string(contents))
-}
-
-func reauthorPackage(i,p string, WSV map[string]string){
-        var contents []byte
-                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
-                        fmt.Println("Reauthoring", p+"/"+i,":")
-                        fmt.Println(string(contents))
-}
-
-func incrementPackage(i,p string, WSV map[string]string){
-        var contents []byte
-                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
-                        fmt.Println("Reauthoring", p+"/"+i,":")
                         fmt.Println(string(contents))
 }
 
@@ -671,15 +697,15 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "checkrepo" { checkRepo(REPOS,METAS,tail)
           }else if tail[0] == "enroll"    { enrollPackage(wkPtr,WSV,tail)
           }else if tail[0] == "withdraw"  { withdrawPackage(wkPtr,WSV,tail)
+          }else if tail[0] == "relicense" { relicensePackage(wkPtr,WSV,tail)
+          }else if tail[0] == "reauthor"  { reauthorPackage(wkPtr,WSV,tail)
+          }else if tail[0] == "increment" { incrementPackage(wkPtr,WSV,tail)
           }else if tail[0] == "prepub"    { repubList(true,wkPtr,WSV,tail)
           }else if tail[0] == "repub"     { repubList(false,wkPtr,WSV,tail)
 	  }else{
 	    sPkgs := buildSourceList(*wkPtr,WSV,strings.Split(tail[1],","))
 	    for i, p := range sPkgs {
                     if tail[0]=="status"    { packageStatus(i,p,WSV)
-              }else if tail[0]=="relicense" { relicensePackage(i,p,WSV)
-              }else if tail[0]=="reauthor"  { reauthorPackage(i,p,WSV)
-              }else if tail[0]=="increment" { incrementPackage(i,p,WSV)
               }else if tail[0]=="latest"    { latestPackage(i,p,WSV)
               }else if tail[0]=="rehash"    { rehashPackage(i,p,WSV)
               }else if tail[0]=="addto"     { addtoPackage(i,p,WSV)
@@ -726,9 +752,9 @@ func main() {
     enroll     <package file(s)> Enroll (register) a package in the workspace with file(s)
     withdraw   <package file(s)> Withdraw (de-register) a package in the workspace with file(s)
     status     <package|all>     Check the status of a package or packages in the workspace and the repos
-    relicense  <package|all>     Change the license of a package or packages in the workspace
-    reauthor   <package|all>     Change the authors of a package or packages in the workspace
-    increment  package           Increment the version number of a package in the workspace
+    relicense  package license   Change the license of a package in the workspace
+    reauthor   package authors   Change the authors of a package in the workspace
+    increment  package version   Increment the version number of a package in the workspace
     latest     <package|all>     Retrieve the latest version of a package from the repos to the workspace
     rehash     <package|all>     Update the hashes of local files in the workspace for the package or packages
     addto      <package file(s)> Add local file(s) to the package in the workspace
