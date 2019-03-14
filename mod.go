@@ -214,8 +214,10 @@ func buildSourceList(wk string, WSV map[string]string,s []string) map[string]str
                 }
           }else{
                 for _, fn := range s {
-                        if _, err := os.Stat(path.Clean(wk)+"/"+fn+".Pkg"); err == nil {
-                                files[fn]=fn+".Pkg"
+		        pe:=dsExtend(fn,path.Clean(wk),WSV)
+
+                        if _, err := os.Stat(pe+"/"+fn+".Pkg"); err == nil {
+                                files[fn]=pe
                         }else{
                                 fmt.Println("Package",fn,"Not Found, exiting.")
                                 os.Exit(1)
@@ -489,11 +491,8 @@ func enrollPackage( wkPtr *string, WSV map[string]string, tail []string){
 				e:=leStr(le)
                                 ds,_:=WSV["workspace-packages-dirstyle"]
 
-		                c :=        "package ["+nPkgs[0]+"] v0.0.0"+e+e+
-                                            "requires ("+e+
-					    ")"+e+e+
-                                            "provides ("+e+
-                                            ")"+e
+		                c :=        "package,"+nPkgs[0]+",v0.0.0"+e+
+                                            "license,NOLICENSE,UNKNOWN"+e
 
                   		if ds=="flat"{
 		                	err := ioutil.WriteFile(path.Clean(*wkPtr)+"/"+nPkgs[0]+
@@ -538,25 +537,45 @@ func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
 
 func packageStatus(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Status of", p,":")
+                        fmt.Println(string(contents))
+}
+
+func relicensePackage(i,p string, WSV map[string]string){
+        var contents []byte
+        
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
+                        fmt.Println("Relicensing", i,":")
+                        fmt.Println(string(contents))
+}
+
+func reauthorPackage(i,p string, WSV map[string]string){
+        var contents []byte
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
+                        fmt.Println("Reauthoring", p+"/"+i,":")
                         fmt.Println(string(contents))
 }
 
 func latestPackage(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
+func dsExtend(i,p string, WSV map[string]string) string {
+        pe:=p
+        ds,_:=WSV["workspace-packages-dirstyle"]
+        if ds=="flat" {
+                pe=pe+"/"+i
+        }
+	return pe
+}
+
 func rehashPackage(i,p string, WSV map[string]string){
         var contents []byte
-	pe:=p
-        ds,_:=WSV["workspace-packages-dirstyle"]
-	if ds=="flat" {
-		pe=pe+"/"+i
-	}
+	pe:=dsExtend(i,p,WSV)
 
         contents, _ = ioutil.ReadFile(pe+".Pkg")//; check(err)
         fmt.Println("Rehashing", i, pe+".Pkg",":")
@@ -596,28 +615,28 @@ func rehashPackage(i,p string, WSV map[string]string){
 
 func addtoPackage(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Adding to", p,":")
                         fmt.Println(string(contents))
 }
 
 func packageUpdates(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
 func exactPackage(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
 
 func packageProvider(i,p string, WSV map[string]string){
         var contents []byte
-                        contents, _ = ioutil.ReadFile(p+".Pkg")
+                        contents, _ = ioutil.ReadFile(p+"/"+i+".Pkg")
                         fmt.Println("Status of", p,":")
                         fmt.Println(string(contents))
 }
@@ -650,13 +669,15 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
 	  }else{
 	    sPkgs := buildSourceList(*wkPtr,WSV,strings.Split(tail[1],","))
 	    for i, p := range sPkgs {
-                    if tail[0]=="status"  { packageStatus(i,p,WSV)
-              }else if tail[0]=="latest"  { latestPackage(i,p,WSV)
-              }else if tail[0]=="rehash"  { rehashPackage(i,p,WSV)
-              }else if tail[0]=="addto"   { addtoPackage(i,p,WSV)
-              }else if tail[0]=="updates" { packageUpdates(i,p,WSV)
-              }else if tail[0]=="exact"   { exactPackage(i,p,WSV)
-              }else if tail[0]=="provider"{ packageProvider(i,p,WSV)
+                    if tail[0]=="status"    { packageStatus(i,p,WSV)
+              }else if tail[0]=="relicense" { relicensePackage(i,p,WSV)
+              }else if tail[0]=="reauthor"  { reauthorPackage(i,p,WSV)
+              }else if tail[0]=="latest"    { latestPackage(i,p,WSV)
+              }else if tail[0]=="rehash"    { rehashPackage(i,p,WSV)
+              }else if tail[0]=="addto"     { addtoPackage(i,p,WSV)
+              }else if tail[0]=="updates"   { packageUpdates(i,p,WSV)
+              }else if tail[0]=="exact"     { exactPackage(i,p,WSV)
+              }else if tail[0]=="provider"  { packageProvider(i,p,WSV)
               }else{
                 fmt.Println(tail[0]," means what?")
               }
