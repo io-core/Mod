@@ -1,9 +1,9 @@
 k,v1,v2
 package,Mod,v0.1.0
-from,[core-io]20190101121212
+from,github.com/io-core,whenever
 license,MIT,Charles Perkins
 r,[core]/System,v5.0.0
-p,PackageFrames.Mod,-
-p,Mod.Mod,-
-p,Packages.Mod,-
-p,Resources.Mod,-
+p,Packages.Mod,43da8567926d4a2adc3064df8316eff658e691305ef629e4b59d7ea008adfdb5
+p,Resources.Mod,3b31e1fc5ef5dc895ab28d1d8d173d5a3200db7a31b0bd9a61a78e2b527baab6
+p,PackageFrames.Mod,61333b399fa8fc6084be5039a3f191288dcd8fc52e8793081ef102e5f29a3d7c
+p,Mod.Mod,bad2a6c977f253bd82bf0b04fe3e4e843cc87c6e646b5a76536179152eba9911
