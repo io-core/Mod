@@ -545,7 +545,7 @@ func withdrawPackage( wkPtr *string, WSV map[string]string, tail []string){
 func relicensePackage(wkPtr *string, WSV map[string]string, tail []string){
         nPkgs := strings.Split(tail[1],",")
 	if len(tail)<3 {
-		fmt.Println("usage: mod relicense LICENSE")
+		fmt.Println("usage: mod relicense PACKAGE LICENSE")
 	}else{
                 if len(nPkgs)!=1 || tail[1]=="all"{
                         fmt.Println("Only relicense one package at a time")
@@ -567,7 +567,7 @@ func relicensePackage(wkPtr *string, WSV map[string]string, tail []string){
 func reauthorPackage(wkPtr *string, WSV map[string]string, tail []string){
         nPkgs := strings.Split(tail[1],",")
         if len(tail)<3 {
-                fmt.Println("usage: mod reauthor \"AUTHORS\"")
+                fmt.Println("usage: mod reauthor PACKAGE \"AUTHORS\"")
         }else{
                 if len(nPkgs)!=1 || tail[1]=="all"{
                         fmt.Println("Only reauthor one package at a time")
@@ -584,6 +584,28 @@ func reauthorPackage(wkPtr *string, WSV map[string]string, tail []string){
                         }
                 }
 	}
+}
+
+func resourcePackage(wkPtr *string, WSV map[string]string, tail []string){
+        nPkgs := strings.Split(tail[1],",")
+        if len(tail)<3 {
+                fmt.Println("usage: mod resource PACKAGE PATH")
+        }else{
+                if len(nPkgs)!=1 || tail[1]=="all"{
+                        fmt.Println("Only resource one package at a time")
+                }else{
+                        pe:=dsExtend(tail[1],*wkPtr,WSV)
+                        if _, err := os.Stat(pe+"/"+tail[1]+".Pkg"); err == nil {
+                                n,v,f,r,l,a,IMP,PRO:=getPackageSettings(tail[1],pe)
+                                fmt.Println("Changing origin of", tail[1],"from",f,"to",tail[2])
+                                f=tail[2]
+                                putPackageSettings(tail[1],pe,n,v,f,r,l,a,IMP,PRO)
+
+                        }else{
+                                fmt.Println("Package",tail[1],"not found.")
+                        }
+                }
+        }
 }
 
 func incrementPackage(wkPtr *string, WSV map[string]string, tail []string){
@@ -699,7 +721,7 @@ func exactPackage(i,p string, WSV map[string]string){
 
 func packageProvider(i,p string, WSV map[string]string){
         _,_,f,_,_,_,_,_:=getPackageSettings(i,p)
-        fmt.Println("  ",i,"is from",f)
+        fmt.Println("  ",i,"origin is",f)
 }
 
 
@@ -727,6 +749,7 @@ func doCommand( wkPtr, lePtr, dsPtr *string, tail []string) {
           }else if tail[0] == "withdraw"  { withdrawPackage(wkPtr,WSV,tail)
           }else if tail[0] == "relicense" { relicensePackage(wkPtr,WSV,tail)
           }else if tail[0] == "reauthor"  { reauthorPackage(wkPtr,WSV,tail)
+          }else if tail[0] == "resource"  { resourcePackage(wkPtr,WSV,tail)
           }else if tail[0] == "increment" { incrementPackage(wkPtr,WSV,tail)
           }else if tail[0] == "prepub"    { repubList(true,wkPtr,WSV,tail)
           }else if tail[0] == "repub"     { repubList(false,wkPtr,WSV,tail)
@@ -779,10 +802,11 @@ func main() {
     delmeta    <metarepo>            Remove a metarepo from the workspace
  x  checkrepo  <repo>                Check the status of a repo for the workspace
     enroll     <package>             Enroll (register) a local package into the workspace
-    withdraw   <package> <file(s)>   Withdraw (de-register) a local package from the workspace
+    withdraw   <package>             Withdraw (de-register) a local package from the workspace
  x  status     <package|all>         Check the status of a package or packages in the workspace and the repos
     relicense  <package> <license>   Change the license of a package in the workspace
     reauthor   <package> <authors>   Change the authors of a package in the workspace
+    resource   <package> <authors>   Change the origin of a package in the workspace
     increment  <package> <version>   Increment the version number of a package in the workspace
  x  latest     <package|all>         Retrieve the latest version of a package from the repos to the workspace
     version    <package|all>         Show the version(s) of a package or packages in the workspace
