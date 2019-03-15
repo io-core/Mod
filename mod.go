@@ -58,8 +58,8 @@ func getPackageSettings(pn,pl string) (string,string,string,string,string,string
         PRO := make(map[string]string)
 	name:=""
 	version:="v0.0.0"
-	from:="unrecorded"
-	retrieved:=""
+	from:="local"
+	retrieved:="?"
 	license:="unknown"
 	authors:="anonymous"
 	var a []string
