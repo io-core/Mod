@@ -122,10 +122,10 @@ func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[st
 	WSV := make(map[string]string)
         REPOS := make(map[string]string)
         METAS := make(map[string]string)
-	if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err == nil {
-		b, err := ioutil.ReadFile(path.Clean(wk)+"/Packaging.csv")
+	if _, err := os.Stat(path.Clean(wk)+"/Packages.Wrk"); err == nil {
+		b, err := ioutil.ReadFile(path.Clean(wk)+"/Packages.Wrk")
 		if err != nil {
-			fmt.Print("Couldn't read Packaging.csv")
+			fmt.Print("Couldn't read Packages.Wrk")
 			os.Exit(1)
 		}
 		a:=strings.Split(string(nnl(b)),"\n")
@@ -164,9 +164,9 @@ func getWorkspaceSettings(wk string) (map[string]string,map[string]string,map[st
 
 func putWorkspaceSettings(wk string, WSV, REPOS, METAS map[string]string){
 	t := time.Now()
-	err := os.Rename(path.Clean(wk)+"/Packaging.csv",path.Clean(wk)+"/Packaging.csv."+t.Format("20060102150405"))
+	err := os.Rename(path.Clean(wk)+"/Packages.Wrk",path.Clean(wk)+"/Packages.Wrk."+t.Format("20060102150405"))
 	check(err)
-	f, err := os.Create(path.Clean(wk)+"/Packaging.csv"); check(err)
+	f, err := os.Create(path.Clean(wk)+"/Packages.Wrk"); check(err)
 	defer f.Close()
         _, err = f.WriteString("setting,value\n"); check(err)
 	for k,v := range WSV {
@@ -183,7 +183,7 @@ func putWorkspaceSettings(wk string, WSV, REPOS, METAS map[string]string){
         }
 
 	f.Sync()
-	err = os.Remove(path.Clean(wk)+"/Packaging.csv."+t.Format("20060102150405")); check(err)
+	err = os.Remove(path.Clean(wk)+"/Packages.Wrk."+t.Format("20060102150405")); check(err)
 
 }
 
@@ -260,17 +260,17 @@ func initWorkspace(wk, le, ds string){
 		os.Exit(1)
 	}
 
-        if _, err := os.Stat(path.Clean(wk)+"/Packaging.csv"); err != nil {
+        if _, err := os.Stat(path.Clean(wk)+"/Packages.Wrk"); err != nil {
 	        c := []byte("setting,value"+e+"workspace-module-line-ending,"+le+e+"workspace-packages-dirstyle,"+ds+e)
-	        err := ioutil.WriteFile(path.Clean(wk)+"/Packaging.csv", c, 0644)
+	        err := ioutil.WriteFile(path.Clean(wk)+"/Packages.Wrk", c, 0644)
 	        if err != nil{
-                        fmt.Println("Error Creating Packaging.csv file.")
+                        fmt.Println("Error Creating Packages.Wrk file.")
 			os.Exit(1)
 		}else{
-                	fmt.Println("Created Packaging.csv file.")
+                	fmt.Println("Created Packages.Wrk file.")
 		}
         }else{
-                fmt.Println("Packaging.csv already exists in",wk,"exiting.")
+                fmt.Println("Packages.Wrk already exists in",wk,"exiting.")
                 os.Exit(1)
         }
 
@@ -324,7 +324,7 @@ func repubList( init bool, wkPtr *string, WSV map[string]string, tail []string){
     e:=leStr(le)
     if WSV["workspace-packages-dirstyle"] == "flat" { subDir = "/Index" }
     if WSV["workspace-packages-dirstyle"] == "path" { subDir = "/Index" }
-    n:=path.Clean(tail[2])+subDir+"/Packages.csv"
+    n:=path.Clean(tail[2])+subDir+"/Packages.Ndx"
     if len(tail)>2 {
         if _, err = os.Stat(n); err == nil {
 	    if ! init {
