@@ -25,13 +25,20 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"bytes"
 	"time"
+	"log"
+	"path/filepath"
+	"io"
 	"crypto/sha256"
+	git "gopkg.in/src-d/go-git.v4"
+        //"gopkg.in/src-d/go-git.v4/storage/memory"
+
 )
 
 func check(e error) {
@@ -477,6 +484,61 @@ func checkRepo( REPOS, METAS map[string]string, tail []string){
                         }
                   }else{
                         fmt.Println("checking repo "+r)
+			//repo, _ := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+			//    URL: "https://github.com/io-core/Index",
+			//})
+
+			//err22 := repo.Pull(&git.PullOptions{
+			//    RemoteName: "origin"
+			//})
+
+			//ref, _ := repo.Head()
+			//fmt.Println(ref)
+
+			//w, err := repo.Worktree()
+			//check(err)
+			//fmt.Println(w)
+
+			// https://raw.githubusercontent.com/io-core/Index/master/Packages.Ndx
+
+			x:=strings.SplitN(REPOS[t],"/",2)
+			if x[0] == "github.com" {
+				flaturl:="https://raw.githubusercontent.com/"+x[1]+"/Index/master/Packages.Ndx"
+                                combinedurl:="https://raw.githubusercontent.com/"+x[1]+"/master/Packages.Ndx"
+				resp, err := http.Get(flaturl);check(err)
+				defer resp.Body.Close()
+				body, err := ioutil.ReadAll(resp.Body); check(err)
+				if string(body[:32]) == "package,license,version,location" {
+					fmt.Println(string(body))
+				}else{
+					fmt.Println(combinedurl)
+                                	resp2, err2 := http.Get(combinedurl);check(err2)
+                                	defer resp2.Body.Close()
+                                	body2, err2 := ioutil.ReadAll(resp2.Body); check(err2)
+
+					fmt.Println(string(body2))
+				}
+			}else{
+				dir, err := ioutil.TempDir("", "pkg-"); check(err)
+			
+				defer os.RemoveAll(dir)
+
+				fmt.Println("https://"+string(REPOS[t])+"/Index")
+		
+				_, err = git.PlainClone(dir, false, &git.CloneOptions{
+					URL: "https://"+string(REPOS[t])+"/Index",
+				})
+				if err != nil {
+					log.Fatal(err)
+				}
+				// Prints the content of the CHANGELOG file from the cloned repository
+				packagelist, err := os.Open(filepath.Join(dir, "Packages.Ndx"))
+				if err != nil {
+					log.Fatal(err)
+				}
+				io.Copy(os.Stdout, packagelist)
+			}
+
                   }
 }
 
