@@ -473,14 +473,50 @@ func delMeta( wk string, WSV, REPOS, METAS map[string]string, tail []string){
                   }
 }
 
+
+func getRepoDefaultBranch( repo string ) (db string) {
+
+        flatapiurl:="https://api.github.com/repos/"+repo+"/Index"
+	combinedapiurl:="https://api.github.com/repos/"+repo
+
+	resp, err := http.Get(flatapiurl);check(err)
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body); check(err)
+	ans:=string(body)
+	if ans[:23]=="{\"message\":\"Not Found\"," {
+
+	        resp2, err2 := http.Get(combinedapiurl);check(err)
+	        defer resp2.Body.Close()
+	        body2, err2 := ioutil.ReadAll(resp2.Body); check(err2)
+		ans = string(body2)
+	}
+	
+	x:=strings.Split(ans,",")
+	db = "master"
+	for _,e:=range x {
+		i:=strings.Split(e,":")
+		if i[0]=="\"default_branch\"" {
+			c:=len(i[1])
+			db = i[1][1:c-1]
+		}
+	}
+	
+	
+
+	return db
+}
+
 func getRepoStats(t string, REPOS map[string]string ) (string, int) {
 	p:=""
 	n:=0
                         x:=strings.SplitN(REPOS[t],"/",2)
                         repolist:=""
                         if x[0] == "github.com" {
-                                flaturl:="https://raw.githubusercontent.com/"+x[1]+"/Index/master/Packages.Ndx"
-                                combinedurl:="https://raw.githubusercontent.com/"+x[1]+"/master/Packages.Ndx"
+
+				dBranch := getRepoDefaultBranch( x[1] )
+
+                                flaturl:="https://raw.githubusercontent.com/"+x[1]+"/Index/"+dBranch+"/Packages.Ndx"
+                                combinedurl:="https://raw.githubusercontent.com/"+x[1]+"/"+dBranch+"/Packages.Ndx"
                                 resp, err := http.Get(flaturl);check(err)
                                 defer resp.Body.Close()
                                 body, err := ioutil.ReadAll(resp.Body); check(err)
