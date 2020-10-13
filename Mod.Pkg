@@ -2,6 +2,7 @@ k,v1,v2
 package,Mod,v0.1.0
 from,github.com/io-core,whenever
 license,MIT,Charles Perkins
+doc,stdlib,provides source code package management in Oberon.
 r,[core]/System,v5.0.0
 p,PackageFrames.Mod,61333b399fa8fc6084be5039a3f191288dcd8fc52e8793081ef102e5f29a3d7c
 p,Mod.Mod,bad2a6c977f253bd82bf0b04fe3e4e843cc87c6e646b5a76536179152eba9911
