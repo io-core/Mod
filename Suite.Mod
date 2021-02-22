@@ -7,9 +7,9 @@
 .. toctree::
    :maxdepth: 2
    :caption: Development:
-   :includehidden:
+   :hidden:
 
-   ../Contrib/cA    <cA.rst>
+   ../Examples/Examples  [suplib/Examples.rst]
    ../Contrib/cB    <cB.rst>
    ../Contrib/cC    <cC.rst>
    ../Contrib/cD    <cD.rst>
@@ -17,7 +17,7 @@
 
 Supplemental and contributed modules here...
 
-https://github.com/io-core/Contrib/blob/main/Suite.Mod
+https://github.com/io-core/Mod/blob/main/Suite.Mod
 
 end-documentation-node *)
 
