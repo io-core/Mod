@@ -1,9 +1,10 @@
 MODULE Mod;
 
-  IMPORT Files, Fonts, Viewers, Texts, Oberon,
-    TextFrames, MenuViewers, Packages, PackageFrames;
+  IMPORT Files, Fonts, Viewers, Texts, Oberon, TextFrames, MenuViewers, Packages, PackageFrames;
 
   CONST Menu = "System.Close  System.Copy  System.Grow  Mod.Delete  Mod.Ticks  Mod.Restore  Mod.Store";
+
+  TYPE
 
   VAR W: Texts.Writer;
 

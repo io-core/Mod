@@ -1,12 +1,16 @@
 MODULE Resources;
-IMPORT SYSTEM, Kernel, Oberon;
+  IMPORT SYSTEM, Kernel, Oberon;
 
-TYPE
-  Resource* = POINTER TO ResourceDesc;
-  ResourceDesc* = RECORD
-    value*: INTEGER;
-    next: Resource
-  END;
+  CONST
+
+  TYPE
+    Resource* = POINTER TO ResourceDesc;
+    ResourceDesc* = RECORD
+      value*: INTEGER;
+      next: Resource
+    END;
+
+  VAR
 
 PROCEDURE New*(R: Resource; v: INTEGER) : Resource;
 BEGIN

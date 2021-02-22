@@ -1,5 +1,4 @@
 MODULE Packages;
-
   IMPORT SYSTEM, Files, Fonts, Resources;
 
   CONST 
@@ -55,8 +54,6 @@ MODULE Packages;
     END;
 
     MethodDesc* = RECORD
-(*        module*, allocator*: Name;
-        new*: Modules.Command;             *)
         copy*: PROCEDURE (from, to: Component);
         draw*, change*: PROCEDURE (C: Component; VAR msg: Msg);
         selectable*: PROCEDURE (C: Component; x, y: INTEGER): BOOLEAN;
@@ -66,7 +63,7 @@ MODULE Packages;
       END ;
 
     
-VAR 
+  VAR 
  
   res*: INTEGER;
   width: INTEGER;
