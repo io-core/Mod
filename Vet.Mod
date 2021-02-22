@@ -3,19 +3,6 @@
   IO Style Guide
 ##################
 
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Development:
-   :includehidden:
-
-   ../Mod/Code        <Code.rst>
-   ../Mod/Commit      <Commit.rst>
-   ../Mod/Comment     <Comment.rst>
-   ../Mod/Complain    <Complain.rst>
-
-Some guides for style...
-
 Coding Guidelines
 =================
 
