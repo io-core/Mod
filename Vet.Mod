@@ -1,7 +1,7 @@
 (* begin-documentation-node
-##################
-  IO Style Guide
-##################
+##########################################
+  IO Style Guide and Contrib. Process
+##########################################
 
 Coding Guidelines
 =================
