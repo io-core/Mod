@@ -10,10 +10,10 @@
    :hidden:
 
    ../Examples/Examples  [suplib/Examples.rst]
-   ../Contrib/cB    <cB.rst>
-   ../Contrib/cC    <cC.rst>
-   ../Contrib/cD    <cD.rst>
-   ../Contrib/cE    <cE.rst>
+   ../BASIC/BASIC        [suplib/BASIC.rst]
+   ../C/C                [suplib/C.rst]
+   ../Go/Go              [suplib/Go.rst]
+   ../Pascal/Pascal      [suplib/Pascal.rst]
 
 Supplemental and contributed modules here...
 
