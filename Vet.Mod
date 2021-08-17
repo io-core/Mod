@@ -10,10 +10,11 @@ Check out the main project on a Linux or Mac based system
 
 This repo uses submodules, to get the whole thing:
 
-git clone --recursive https://github.com/io-core/io
+ * git clone --recursive https://github.com/io-core/io
+
 After cloning the submodules may not be checked out to the main branch so after the above command you should:
 
-cd io; bash makemain.sh
+ * cd io; bash makemain.sh
 
 
 Navigating the Code
@@ -27,13 +28,41 @@ Within root the src/github.com/io-core path provides a home for the io-core proj
 
 Within /root/src/github.com/io-core:
 
- * Boot contains source code for booting an IO target system and also shell scripts for building target artifacts on the host system.
- * Build contains the compiler source code used to compile the system, including the compiler itself.
- * Kernel, Files, and Modules comprise the inner core of the IO system.
- * Oberon, Edit, and System comprise the outer core of the IO system.
- * Assist, Attest, Crypto, Doc, Draw, Paint, Mod, ArgParse, and Test are standard packages in the IO system.
- * Examples, BASIC, C, Go, and Pascal are supplemental packages in the IO system.
+.. list-table::
+   :widths: 40 60
+   :header-rows: 0
 
+   * - Boot
+     - source code for booting an IO target system and also shell scripts for building target artifacts on the host system.
+   * - Build
+     - compiler source code used to compile the system, including the compiler itself.
+   * - Kernel, Files, and Modules
+     - the inner core of the IO system.
+   * - Oberon, Edit, and System
+     - the outer core of the IO system.
+   * - Assist, Attest, Crypto, Doc, Draw, Paint, Mod, ArgParse, Test
+     - standard packages in the IO system.
+   * - Examples, BASIC, C, Go, Pascal
+     - supplemental packages in the IO system.
+
+The Doc package also contains shell scripts used in the target system to generate documentation for the system.
+
+All documentation for the system resides in comments within the source modules of the system.
+
+Compiling the Code
+==================
+
+Building the artifacts of an IO system on a Linux or Mac host requres several external packages:
+
+ * cd root/src/github.com/io-core/Boot; bash compile.sh
+
+The system will use a previously built image to perform compilation, a new image will be generated 
+
+Building the documetation of the IO system on a Linux or Mac host requires several more external packages:
+
+ * cd root/src/github.com/io-core/Doc; bash genhtml.sh; make clean; make html
+
+The documentation will be found in Doc/gen/html/
 
 Coding Guidelines
 =================
