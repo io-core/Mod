@@ -1,7 +1,7 @@
 (* begin-documentation-node
-##########################################
-  IO Style Guide and Contrib. Process
-##########################################
+################################################
+  Compiling, Style Guide, and Contrib. Process
+################################################
 
 Obtaining the Code
 ==================
@@ -38,7 +38,7 @@ Within /root/src/github.com/io-core:
 Coding Guidelines
 =================
 
-On your own system, anything goes. Code intended for a PUll Request to Integrated Oberon however should aspire to simplicity, clarity, and generality.
+On your own system, anything goes. Code intended for a Pull Request to Integrated Oberon however should aspire to simplicity, clarity, and generality.
 
 Commit Message Conventions
 ==========================
