@@ -1,7 +1,7 @@
 (* begin-documentation-node
-################################################
-  Compiling, Style Guide, and Contrib. Process
-################################################
+###########################################
+  Everything from Source and Contributing
+###########################################
 
 Obtaining the Code
 ==================
@@ -29,20 +29,20 @@ Within root the src/github.com/io-core path provides a home for the io-core proj
 Within /root/src/github.com/io-core:
 
 .. list-table::
-   :widths: 40 60
+   :widths: 30 70
    :header-rows: 0
 
    * - Boot
      - source code for booting an IO target system and also shell scripts for building target artifacts on the host system.
    * - Build
      - compiler source code used to compile the system, including the compiler itself.
-   * - Kernel, Files, and Modules
+   * - Kernel Files Modules
      - the inner core of the IO system.
-   * - Oberon, Edit, and System
+   * - Oberon Edit System
      - the outer core of the IO system.
-   * - Assist, Attest, Crypto, Doc, Draw, Paint, Mod, ArgParse, Test
+   * - Assist Attest Crypto Doc Draw Paint Mod ArgParse Test
      - standard packages in the IO system.
-   * - Examples, BASIC, C, Go, Pascal
+   * - Examples BASIC C Go Pascal
      - supplemental packages in the IO system.
 
 The Doc package also contains shell scripts used in the target system to generate documentation for the system.
