@@ -3,6 +3,38 @@
   IO Style Guide and Contrib. Process
 ##########################################
 
+Obtaining the Code
+==================
+
+Check out the main project on a Linux or Mac based system
+
+This repo uses submodules, to get the whole thing:
+
+git clone --recursive https://github.com/io-core/io
+After cloning the submodules may not be checked out to the main branch so after the above command you should:
+
+cd io; bash makemain.sh
+
+
+Navigating the Code
+===================
+
+At the top of the repo are some shell scripts, folders for artifacts of the build process, and a root folder.
+
+The directory structures under root mimic a potential future deployed self-hosting target system.
+
+Within root the src/github.com/io-core path provides a home for the io-core project submodules needed to build the target system.
+
+Within /root/src/github.com/io-core:
+
+ * Boot contains source code for booting an IO target system and also shell scripts for building target artifacts on the host system.
+ * Build contains the compiler source code used to compile the system, including the compiler itself.
+ * Kernel, Files, and Modules comprise the inner core of the IO system.
+ * Oberon, Edit, and System comprise the outer core of the IO system.
+ * Assist, Attest, Crypto, Doc, Draw, Paint, Mod, ArgParse, and Test are standard packages in the IO system.
+ * Examples, BASIC, C, Go, and Pascal are supplemental packages in the IO system.
+
+
 Coding Guidelines
 =================
 
